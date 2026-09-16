@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+venv/
+node_modules/
+.next/
+dist/
+build/
+*.log
+.DS_Store
+data/raw/
+data/staging/
+*.duckdb
+*.sqlite
