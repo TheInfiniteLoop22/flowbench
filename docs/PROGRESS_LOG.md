@@ -87,3 +87,54 @@ branching needed).
 **Next**: Phase 2 (warehouse) — star schema migrations, PostGIS geometry
 on `dim_station`, `station_hourly_balance` materialized view, and
 resolving the three FB-00x issues at load time via filters/dedup.
+
+---
+
+## 2026-09-17 — Phase 2 complete: warehouse
+
+**Status**: Phase 2 ✅ done. Star schema built, all sanity checks pass.
+
+- Split warehouse SQL into two layers: one-time schema DDL
+  (`warehouse/migrations/0002_warehouse_schema.sql`) and idempotent,
+  re-runnable transforms (`warehouse/transforms/*.sql`, driven by
+  `etl/build_warehouse.py`) — so the warehouse can be rebuilt from
+  staging on a schedule without re-migrating, matching the proposal's
+  "scheduled batch ELT" design.
+- Built `dim_time` (367 days, hardcoded US federal holiday list for the
+  window), `dim_user_type`, `dim_station` (2,592 rows, most-recent-
+  observation-wins dedup, PostGIS `geometry(Point,4326)`), and
+  `fact_trips` (45,687,703 rows) with a PostGIS-computed `distance_m`.
+- Resolved FB-002 and FB-003 at warehouse-load time (bad-duration filter,
+  `ROW_NUMBER()` dedup on `ride_id`) — staging left untouched, as planned.
+- Materialized `station_hourly_balance` (11,875,461 station×hour rows).
+- **Hit and fixed a real bug during sanity checks**: max trip distance
+  came back as 8,660 km. Traced to a depot/placeholder station
+  (`SYS018`, "Bronx WH station") with `(0,0)` coordinates — logged as
+  [FB-004](BUG_TRACKER.md), fixed by excluding `(0,0)` in the
+  `dim_station` build the same way nulls are excluded. Re-ran the full
+  build; max distance is now a sane 35.2 km.
+- **Investigated an unexpected sanity-check result rather than
+  hand-waving it**: system-wide inflow ≠ outflow by 107,129 trips. My
+  first assumption (a date-boundary artifact) was wrong — direct
+  counting showed it's a real ~6:1 asymmetry between trips with a
+  resolved start-but-not-end station vs. the reverse. Logged as
+  [FB-005](BUG_TRACKER.md) and flagged in RESULTS.md as a genuine Phase 3
+  finding candidate ("trips that don't return to the network"), not
+  swept under the rug.
+- Logged two operational notes for later: [FB-006](BUG_TRACKER.md) (the
+  fact_trips rebuild takes ~55–58 min — a good Phase 4 optimization
+  target) and [FB-007](BUG_TRACKER.md) (local disk at 95%/32GB free —
+  not urgent, but tracked).
+- Warehouse total size ~25 GB. Numbers recorded in RESULTS.md.
+
+**Diversion from original plan**: discovered TRUNCATE can't touch a
+table that's FK-referenced by another, even if that other table is
+empty — had to combine `fact_trips` + all three dimension tables into a
+single `TRUNCATE ... ,` statement rather than truncating each dim
+separately. Documented directly in `000_truncate_fact.sql` so the next
+person doesn't hit the same error.
+
+**Next**: Phase 3 (analysis library) — core 5 queries plus the P1 tier
+(station typology, lost-trip estimate, rebalancing ROI ranking, weather
+correlation), starting with the "unresolved-end-station" finding
+surfaced above since it's already half-investigated.

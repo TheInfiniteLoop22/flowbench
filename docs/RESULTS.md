@@ -18,7 +18,23 @@ Last updated: 2026-09-17 — Phase 1 (data + staging) complete.
 | Stations (distinct, start+end) | **2,593** |
 | Staging size on disk | ~12 GB (Postgres, includes indexes) |
 | Data-quality pass rate | 99.999% clean on hard checks (0 null IDs/timestamps, 0 bad categories); 3 soft issues tracked as [FB-001](BUG_TRACKER.md), [FB-002](BUG_TRACKER.md), [FB-003](BUG_TRACKER.md) affecting a combined ~0.36% of rows |
-| Warehouse size (rows, disk) | *TBD — Phase 2* |
+| `fact_trips` rows | **45,687,703** (994 dropped: bad duration + duplicate `ride_id`, see FB-002/003) |
+| `dim_station` rows | **2,592** (1 depot placeholder excluded, FB-004) |
+| `station_hourly_balance` rows | 11,875,461 (station × hour grain) |
+| Warehouse (staging + star schema) total size | ~25 GB |
+| Referential integrity | 0 orphaned FKs across ~137M FK-checked row-references |
+| Distance coverage | 99.7% of trips have a computed `distance_m` (PostGIS geography distance between resolved stations); max 35.2 km, 0 negative |
+
+## Notable finding (surfaced during Phase 2 sanity checks, not yet a Phase 3 query)
+
+**107,129 more trips leave a station than return to one.** Specifically:
+128,311 trips have a resolved start station but no resolved end station,
+vs. only 21,182 the other way — a ~6:1 asymmetry, not sampling noise or
+a date-boundary artifact (verified directly, see [FB-005](BUG_TRACKER.md)).
+Candidate explanation: e-bike trips ending outside the docked network.
+Worth a real Phase 3 query — "where do undocked-ending trips originate,
+and does it cluster by station or by rideable_type" is exactly the kind
+of finding this project is supposed to produce.
 
 ## Headline finding: rebalancing candidates
 

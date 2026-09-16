@@ -19,13 +19,13 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done · ❌ cut/deferred
 - [x] Data-quality checks: row counts vs. source, null audit, duplicate check
 - [x] Document findings in PROGRESS_LOG.md
 
-## Phase 2 — Warehouse ⬜
-- [ ] Write SQL migration scripts for star schema (`fact_trips`, `dim_station`, `dim_time`, `dim_user_type`)
-- [ ] PostGIS setup, `geom` column on `dim_station`, distance calc for `fact_trips.distance_m`
-- [ ] Build and materialize `station_hourly_balance`
-- [ ] Sanity check: total inflow == total outflow system-wide
+## Phase 2 — Warehouse ✅
+- [x] Write SQL migration scripts for star schema (`fact_trips`, `dim_station`, `dim_time`, `dim_user_type`)
+- [x] PostGIS setup, `geom` column on `dim_station`, distance calc for `fact_trips.distance_m`
+- [x] Build and materialize `station_hourly_balance`
+- [x] Sanity check: inflow/outflow reconcile exactly to `fact_trips`; system-wide net explained and documented (not silently accepted — see FB-005)
 
-## Phase 3 — Analysis library ⬜
+## Phase 3 — Analysis library ⬜ (next up)
 - [ ] Query 1: demand by station/hour
 - [ ] Query 2: net inflow/outflow per station (rebalancing signal)
 - [ ] Query 3: trip-duration distribution by user type
