@@ -7,15 +7,17 @@
 > [SPEC.md §8](SPEC.md#8-results--success-bar) for the bar each of these
 > is meant to clear.
 
-Last updated: 2026-09-17 — no results yet, project in planning (Phase 0).
+Last updated: 2026-09-17 — Phase 1 (data + staging) complete.
 
 ## Scale
 
 | Metric | Value |
 |---|---|
-| Trips processed | *TBD — Phase 1* |
-| Date range | *TBD — Phase 1* |
-| Stations | *TBD — Phase 1* |
+| Trips processed (staged) | **45,688,697** rows, zero load errors |
+| Date range | 2025-09-01 through 2026-08-31 (12 consecutive months) |
+| Stations (distinct, start+end) | **2,593** |
+| Staging size on disk | ~12 GB (Postgres, includes indexes) |
+| Data-quality pass rate | 99.999% clean on hard checks (0 null IDs/timestamps, 0 bad categories); 3 soft issues tracked as [FB-001](BUG_TRACKER.md), [FB-002](BUG_TRACKER.md), [FB-003](BUG_TRACKER.md) affecting a combined ~0.36% of rows |
 | Warehouse size (rows, disk) | *TBD — Phase 2* |
 
 ## Headline finding: rebalancing candidates

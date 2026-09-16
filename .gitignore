@@ -11,6 +11,7 @@ dist/
 build/
 *.log
 .DS_Store
+.claude/
 data/raw/
 data/staging/
 *.duckdb

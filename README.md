@@ -11,8 +11,10 @@ argument: [new-project-proposal.md](new-project-proposal.md).
 
 ## Status
 
-🟡 **Planning** — see [docs/PROGRESS_LOG.md](docs/PROGRESS_LOG.md) for the
-live status and [docs/PHASE_PLAN.md](docs/PHASE_PLAN.md) for what's next.
+🟡 **In progress** — Phase 1 (data + staging) complete: 45.7M Citi Bike
+trips loaded and validated. See [docs/PROGRESS_LOG.md](docs/PROGRESS_LOG.md)
+for the live status, [docs/RESULTS.md](docs/RESULTS.md) for numbers, and
+[docs/PHASE_PLAN.md](docs/PHASE_PLAN.md) for what's next.
 
 ## Stack
 

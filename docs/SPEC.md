@@ -27,12 +27,29 @@ Last updated: 2026-09-17
 
 ## 2. Open questions (resolve during the phase named)
 
-| # | Question | Resolve in |
+| # | Question | Status |
 |---|---|---|
-| 1 | Exact 12-month window (which months have clean, complete Citi Bike data with consistent schema — station-based vs. the newer format) | Phase 1 |
-| 2 | Whether Citi Bike's current CSV schema includes stable `station_id`s across the whole window, or whether stations need to be de-duplicated/matched by name+lat/long | Phase 1 |
-| 3 | Whether PostGIS is available on the free tier of the chosen host (Neon vs Supabase) at the time of deployment | Phase 5 (deployment) |
-| 4 | Forecasting baseline: moving average vs. simple linear regression — pick based on what the EDA in Phase 3 actually shows (don't decide before seeing the data) | Phase 3 |
+| 1 | Exact 12-month window | **Resolved in Phase 1** — 2025-09 through 2026-08 (most recent complete 12 months at build time). Confirmed single, consistent CSV schema across the whole window (see §2.1). |
+| 2 | `station_id` stability / type | **Resolved in Phase 1** — `start_station_id`/`end_station_id` are **text**, not integers (e.g. `"6527.07"`), and can be null for a small fraction of rows. `dim_station.station_id` is typed `text` accordingly (§3.2 updated). |
+| 3 | Whether PostGIS is available on the free tier of the chosen host (Neon vs Supabase) at the time of deployment | Open — Phase 5 (deployment) |
+| 4 | Forecasting baseline: moving average vs. simple linear regression — pick based on what the EDA in Phase 3 actually shows (don't decide before seeing the data) | Open — Phase 3 |
+
+### 2.1 Confirmed source schema (Phase 1 finding)
+
+Citi Bike's monthly zip contains multiple split CSVs (e.g.
+`202508-citibike-tripdata_1.csv` … `_6.csv`), each with an identical
+13-column header, confirmed identical across every month in the chosen
+window:
+
+```
+ride_id, rideable_type, started_at, ended_at, start_station_name,
+start_station_id, end_station_name, end_station_id, start_lat,
+start_lng, end_lat, end_lng, member_casual
+```
+
+No `capacity` column and no pre-computed distance — both are handled
+downstream (capacity is out of scope for MVP; distance is derived via
+PostGIS in the warehouse layer, §3.2).
 
 ## 3. Data model
 
@@ -46,9 +63,9 @@ Loaded as-is so the ELT step is re-runnable and auditable against source.
 **`fact_trips`**
 | column | type | notes |
 |---|---|---|
-| trip_id | bigint, PK | surrogate if source has no stable ID |
-| start_station_id | FK → dim_station | |
-| end_station_id | FK → dim_station | |
+| ride_id | text, PK | Citi Bike's own ID is a stable alphanumeric string (e.g. `1527BC87374D7267`) — used directly, no surrogate key needed (confirmed unique in Phase 1 DQ checks) |
+| start_station_id | text, FK → dim_station | |
+| end_station_id | text, FK → dim_station | |
 | start_time | timestamp | indexed |
 | end_time | timestamp | |
 | duration_s | int | derived, validated non-negative |
@@ -61,10 +78,10 @@ from Phase 1 EDA).
 **`dim_station`**
 | column | type | notes |
 |---|---|---|
-| station_id | PK | |
+| station_id | text, PK | confirmed text, not integer (Phase 1) — e.g. `"6527.07"` |
 | name | text | |
 | lat, lon | numeric | |
-| capacity | int | nullable — not all sources publish this |
+| capacity | int | not published by this source; left null, not populated in MVP |
 | geom | geometry(Point, 4326) | PostGIS |
 
 **`dim_time`**

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: flowbench_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flowbench
+      POSTGRES_PASSWORD: flowbench
+      POSTGRES_DB: flowbench
+    ports:
+      - "5433:5432"
+    volumes:
+      - flowbench_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flowbench -d flowbench"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  flowbench_pgdata:

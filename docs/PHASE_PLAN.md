@@ -12,12 +12,12 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done · ❌ cut/deferred
 - [x] GitHub repo created and pushed
 - [ ] `.gitignore`, license (optional)
 
-## Phase 1 — Data + staging ⬜
-- [ ] Identify and download a bounded date range of Citi Bike CSVs (target: 12 months)
-- [ ] Resolve open question #1 (exact window) and #2 (station ID stability) — update SPEC.md
-- [ ] Python ELT script: download → load into `stg_trips_raw` (Postgres, local via Docker Compose)
-- [ ] Data-quality checks: row counts vs. source, null audit, duplicate check
-- [ ] Document findings in PROGRESS_LOG.md
+## Phase 1 — Data + staging ✅
+- [x] Identify and download a bounded date range of Citi Bike CSVs (target: 12 months) — 2025-09 through 2026-08
+- [x] Resolve open question #1 (exact window) and #2 (station ID stability) — updated SPEC.md
+- [x] Python ELT script: download → load into `stg_trips_raw` (Postgres, local via Docker Compose)
+- [x] Data-quality checks: row counts vs. source, null audit, duplicate check
+- [x] Document findings in PROGRESS_LOG.md
 
 ## Phase 2 — Warehouse ⬜
 - [ ] Write SQL migration scripts for star schema (`fact_trips`, `dim_station`, `dim_time`, `dim_user_type`)
