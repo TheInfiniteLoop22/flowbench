@@ -64,3 +64,34 @@ an external reader.
 
 **Consequences**: Keep secrets (DB URLs, API keys) out of git via
 `.gitignore` from the first commit onward — never commit `.env` files.
+
+---
+
+## ADR-0004 — Expand analysis library beyond the proposal's MVP set (P1 tier)
+
+**Date**: 2026-09-17
+**Status**: Accepted
+
+**Context**: User asked explicitly for the project to be "big and
+detailed," with "good results to show" — the original 5-query MVP set
+(proposal §5) is enough to prove the core skill set but produces a thin
+results story (a few charts, one significance test).
+
+**Decision**: Add a P1 tier of four more queries (station typology/
+clustering, lost-trip estimate, rebalancing ROI ranking, weather
+correlation) — see SPEC.md §4 and PHASE_PLAN.md Phase 3. Also added
+SPEC.md §8 ("Results & success bar") defining a concrete numeric bar for
+"done and good," a new [RESULTS.md](RESULTS.md) living scoreboard, and a
+Phase 7 (Polish & Presentation) to the phase plan.
+
+**Why**: These four queries are what turn "we computed some stats" into
+"here's a ranked, quantified business recommendation" — the lost-trip
+estimate and ROI ranking are what make `/insights/rebalancing-candidates`
+an actual finding rather than a placeholder endpoint. They're additive
+(P1, not MVP-blocking) so they don't compromise the MVP cut line if time
+runs short.
+
+**Consequences**: Phase 3 is now larger. The MVP cut line (PHASE_PLAN.md)
+is unchanged — these are the first thing to protect, not the first thing
+to cut, once MVP is secured, since they're what makes the results
+worth presenting.

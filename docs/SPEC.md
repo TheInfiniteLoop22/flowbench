@@ -99,6 +99,8 @@ GROUP BY station_id, hour;
 
 ## 4. Analytical query library (Phase 3 deliverables)
 
+**Core (MVP):**
+
 1. Demand by station/hour
 2. Net inflow-vs-outflow per station (rebalancing signal)
 3. Trip-duration distribution by user type
@@ -108,8 +110,32 @@ GROUP BY station_id, hour;
 5. Short-horizon demand forecast per station (moving average or simple
    regression baseline; see open question #4)
 
+**Extended (P1 — raises the project from "a few charts" to "a real
+analysis," do these unless time is genuinely short):**
+
+6. **Station typology / clustering** — bucket stations into profiles
+   (commuter-hub / leisure / mixed) from their hourly demand-curve shape
+   using SQL percentile/window functions (no ML library needed — k-means
+   via `pgvector`/manual centroid SQL is a stretch option, not required).
+7. **Lost-trip estimate** — using `station_hourly_balance`, quantify hours
+   where a station was likely empty/full and estimate demand that went
+   unserved. This is the number that turns "stations run out of bikes"
+   into a dollar-shaped business impact statement.
+8. **Rebalancing ROI ranking** — given a stated assumption (e.g. one truck
+   moves N bikes per hour), rank stations by estimated impact-per-truck-
+   hour. This is the artifact `GET /insights/rebalancing-candidates`
+   serves.
+9. **Weather correlation (stretch)** — join daily demand to free historical
+   weather (Open-Meteo API, no key) and test correlation between
+   precipitation/temperature and demand drop. Cheap to add, strong
+   "thought beyond the given dataset" signal.
+
 Each query gets a sanity check: e.g. total trips in == total trips out
-system-wide over a full period.
+system-wide over a full period. Every finding that ships in the insight
+report must carry a number and, where applicable, a confidence interval —
+"stations near Union Square run low on weekday mornings" is not a result;
+"Station X hits <10% capacity by 8:40am on 83% of weekdays (n=52, 95% CI
+78–88%)" is.
 
 ## 5. API surface
 
@@ -138,7 +164,30 @@ All read-only, no auth:
 - **Frontend**: no hard requirement for MVP; basic component tests are a
   P1 if time allows.
 
-## 8. Non-goals (explicit, to prevent scope creep)
+## 8. Results & success bar
+
+This is the section that defines "done and good," not just "done." A
+completed FlowBench should be able to make every one of these statements
+truthfully — track actual numbers here as they land (also mirrored, with
+narrative, in [RESULTS.md](RESULTS.md)):
+
+- **Scale**: processed N trips (target: several million) across 12 months,
+  M stations, in the warehouse.
+- **Findings**: at least 3 non-trivial statistical findings stated with a
+  number and a confidence interval or p-value — not eyeballed charts.
+- **Headline result**: a ranked, quantified rebalancing-candidate list
+  (top 10–20 stations) with an estimated impact number (lost trips/week,
+  or bikes-short incidents/week) backing each entry.
+- **Performance**: at least one query optimized with a documented
+  before/after (`EXPLAIN ANALYZE` timings + the index/materialized-view
+  that fixed it) — the analytical-workload equivalent of GearGrid's
+  transactional query tuning.
+- **Presentation**: a live deployed demo (dashboard + API), a one-page
+  written insight report, and 2–3 dashboard screenshots/GIFs in the
+  README — a reviewer should be able to understand the headline finding
+  in under a minute without running anything locally.
+
+## 9. Non-goals (explicit, to prevent scope creep)
 
 - No streaming ingestion (batch is the correct and differentiating choice
   here — see proposal §6).

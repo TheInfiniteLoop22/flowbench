@@ -33,6 +33,7 @@ live status and [docs/PHASE_PLAN.md](docs/PHASE_PLAN.md) for what's next.
 | [docs/PROGRESS_LOG.md](docs/PROGRESS_LOG.md) | Dated log of what happened, decisions made, diversions from plan |
 | [docs/BUG_TRACKER.md](docs/BUG_TRACKER.md) | Known issues, open/closed |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Architecture Decision Records (ADRs) |
+| [docs/RESULTS.md](docs/RESULTS.md) | Living scoreboard — real numbers and findings as they land |
 
 ## Repo layout (target)
 
