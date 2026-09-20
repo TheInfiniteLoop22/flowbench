@@ -10,8 +10,11 @@ import MaplibreMap, {
   NavigationControl,
   type MapLayerMouseEvent,
 } from "react-map-gl/maplibre";
+import { setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { api, type City, type Station, type StationImbalance } from "@/lib/api";
+
+setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 const BASEMAP_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
