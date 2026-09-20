@@ -116,9 +116,16 @@ def test_station_demand_unknown_station_is_404(client):
 
 
 def test_station_demand_range_filter_reduces_or_matches_total(client):
+    # Only 7/30/90/all-time are precomputed (warehouse/migrations/0011_*.sql)
+    # -- matches the dashboard's fixed range toggle, not an arbitrary N.
     full = client.get("/stations/S1/demand").json()["total_trips"]
-    limited = client.get("/stations/S1/demand", params={"range": 1}).json()["total_trips"]
+    limited = client.get("/stations/S1/demand", params={"range": 7}).json()["total_trips"]
     assert limited <= full
+
+
+def test_station_demand_rejects_unsupported_range(client):
+    r = client.get("/stations/S1/demand", params={"range": 15})
+    assert r.status_code == 422
 
 
 def test_network_demand(client):

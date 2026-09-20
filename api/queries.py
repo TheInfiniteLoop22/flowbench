@@ -39,31 +39,34 @@ STATION_EXISTS = "SELECT name FROM warehouse.dim_station WHERE station_id = %(st
 # forecast"): one station's daily trip counts, every date in the window
 # represented (including zero-trip days) via the LEFT JOIN to dim_time —
 # needed so a 7-day trailing average isn't thrown off by silently
-# skipped gaps. A single station's fact_trips slice is small (thousands
-# of rows, not millions), so this runs live — no rollup needed. No city
-# filter needed: station_id alone already scopes to one city.
+# skipped gaps. Backed by warehouse.station_daily_demand_agg
+# (warehouse/migrations/0011_*.sql) instead of a live fact_trips scan —
+# fact_trips itself (17GB) doesn't ship to production, only the small
+# rollups do. No city filter needed: station_id alone already scopes to
+# one city.
 STATION_DAILY_DEMAND = """
-    SELECT t.date, count(f.ride_id) AS trip_count
+    SELECT t.date, coalesce(a.trip_count, 0) AS trip_count
     FROM warehouse.dim_time t
-    LEFT JOIN warehouse.fact_trips f
-        ON f.start_date = t.date AND f.start_station_id = %(station_id)s
-    GROUP BY t.date
+    LEFT JOIN warehouse.station_daily_demand_agg a
+        ON a.date = t.date AND a.station_id = %(station_id)s
+    GROUP BY t.date, a.trip_count
     ORDER BY t.date
 """
 
-# range_days=NULL means "the whole window" (WHERE start_date >= NULL is
-# never true, so the CASE falls through to no lower bound). No city
-# filter needed: station_id alone already scopes to one city.
+# range_days=NULL maps to the 0 ("all time") bucket precomputed in
+# warehouse.station_hourly_demand_agg (warehouse/migrations/0011_*.sql)
+# — one of the fixed 7/30/90/0 buckets the dashboard's range toggle
+# actually offers (dashboard/src/components/StationDetail.tsx's
+# RANGES), not a live fact_trips scan. No city filter needed:
+# station_id alone already scopes to one city.
 STATION_DEMAND = """
     SELECT
-        extract(hour FROM start_time)::int AS hour_of_day,
-        count(*)::numeric / greatest(count(DISTINCT start_date), 1) AS avg_trips_per_day,
-        count(*) AS total_trips
-    FROM warehouse.fact_trips
-    WHERE start_station_id = %(station_id)s
-      AND (%(range_days)s IS NULL OR start_date >= (SELECT max(start_date) FROM warehouse.fact_trips WHERE start_station_id = %(station_id)s) - %(range_days)s * interval '1 day')
-    GROUP BY 1
-    ORDER BY 1
+        hour_of_day,
+        total_trips::numeric / greatest(distinct_days, 1) AS avg_trips_per_day,
+        total_trips
+    FROM warehouse.station_hourly_demand_agg
+    WHERE station_id = %(station_id)s AND range_days = %(range_days)s
+    ORDER BY hour_of_day
 """
 
 # Net balance per station at a given hour-of-day, averaged across every

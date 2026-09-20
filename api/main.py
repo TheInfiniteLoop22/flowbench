@@ -71,8 +71,16 @@ def list_stations(
     return [Station(station_id=r[0], name=r[1], lat=r[2], lon=r[3], typology=r[4]) for r in rows]
 
 
+STATION_DEMAND_RANGES = (7, 30, 90)
+
+
 @app.get("/stations/{station_id}/demand", response_model=StationDemand)
-def station_demand(station_id: str, range: int | None = Query(None, ge=1, le=367)):
+def station_demand(station_id: str, range: int | None = Query(None)):
+    if range is not None and range not in STATION_DEMAND_RANGES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"range must be one of {STATION_DEMAND_RANGES} or omitted for all-time",
+        )
     with get_cursor() as cur:
         cur.execute(queries.STATION_EXISTS, {"station_id": station_id})
         row = cur.fetchone()
@@ -80,7 +88,11 @@ def station_demand(station_id: str, range: int | None = Query(None, ge=1, le=367
             raise HTTPException(status_code=404, detail=f"station {station_id!r} not found")
         name = row[0]
 
-        cur.execute(queries.STATION_DEMAND, {"station_id": station_id, "range_days": range})
+        # 0 is the "all time" bucket in warehouse.station_hourly_demand_agg
+        # (warehouse/migrations/0011_*.sql) -- only 7/30/90/0 are
+        # precomputed, matching the dashboard's fixed range toggle
+        # (dashboard/src/components/StationDetail.tsx's RANGES).
+        cur.execute(queries.STATION_DEMAND, {"station_id": station_id, "range_days": range or 0})
         hours = cur.fetchall()
 
     return StationDemand(

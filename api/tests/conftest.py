@@ -135,6 +135,8 @@ def seeded_test_warehouse():
         cur.execute("REFRESH MATERIALIZED VIEW warehouse.rebalancing_candidates_agg")
         cur.execute("REFRESH MATERIALIZED VIEW warehouse.trips_by_day_agg")
         cur.execute("REFRESH MATERIALIZED VIEW warehouse.station_typology_agg")
+        cur.execute("REFRESH MATERIALIZED VIEW warehouse.station_daily_demand_agg")
+        cur.execute("REFRESH MATERIALIZED VIEW warehouse.station_hourly_demand_agg")
 
     conn.close()
     yield
