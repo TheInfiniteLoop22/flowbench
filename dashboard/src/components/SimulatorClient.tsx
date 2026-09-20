@@ -12,18 +12,26 @@ export function SimulatorClient() {
   const [hoursPerShift, setHoursPerShift] = useState(8);
   const [bikesPerTruckHour, setBikesPerTruckHour] = useState(20);
   const [sim, setSim] = useState<RebalancingSimulation | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settledKey, setSettledKey] = useState("");
+  const requestKey = `${trucks}|${hoursPerShift}|${bikesPerTruckHour}|${city}`;
+  const loading = settledKey !== requestKey;
 
   useEffect(() => {
-    setLoading(true);
+    let stale = false;
     api
       .rebalancingSimulator(trucks, hoursPerShift, bikesPerTruckHour, city)
       .then((s) => {
+        if (stale) return;
         setSim(s);
-        setLoading(false);
+        setSettledKey(requestKey);
       })
-      .catch(() => setLoading(false));
-  }, [trucks, hoursPerShift, bikesPerTruckHour, city]);
+      .catch(() => {
+        if (!stale) setSettledKey(requestKey);
+      });
+    return () => {
+      stale = true;
+    };
+  }, [trucks, hoursPerShift, bikesPerTruckHour, city, requestKey]);
 
   const pctRecovered = sim && sim.total_lost_trips_recoverable > 0
     ? sim.total_recovered_trips / sim.total_lost_trips_recoverable

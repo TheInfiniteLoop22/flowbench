@@ -19,21 +19,28 @@ export function StationDetail({ stationId }: { stationId: string }) {
   const [data, setData] = useState<StationDemand | null>(null);
   const [forecast, setForecast] = useState<StationForecast | null>(null);
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [settledKey, setSettledKey] = useState("");
+  const requestKey = `${stationId}|${range.label}`;
+  const loading = settledKey !== requestKey;
 
   useEffect(() => {
-    setLoading(true);
+    let stale = false;
     api
       .stationDemand(stationId, range.days)
       .then((d) => {
+        if (stale) return;
         setData(d);
-        setLoading(false);
+        setSettledKey(requestKey);
       })
       .catch(() => {
+        if (stale) return;
         setError(true);
-        setLoading(false);
+        setSettledKey(requestKey);
       });
-  }, [stationId, range]);
+    return () => {
+      stale = true;
+    };
+  }, [stationId, range, requestKey]);
 
   useEffect(() => {
     api.stationForecast(stationId, 7).then(setForecast).catch(() => setForecast(null));

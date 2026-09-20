@@ -55,14 +55,14 @@ residual of genuinely-renumbered station IDs).
       add an index or materialized view, record before/after timing —
       `GET /network/imbalance`: 667.9ms → 1.5ms (~445x), see [RESULTS.md](RESULTS.md#performance)
 
-## Phase 5 — Dashboard 🟡 in progress (built, not yet deployed)
+## Phase 5 — Dashboard ✅
 - [x] Next.js scaffold, TypeScript, Recharts, MapLibre GL — `dashboard/` (Next.js 16, App Router, Tailwind v4)
 - [x] Map view: stations colored by imbalance — `/`, hour-of-day slider, CARTO dark-matter basemap (no API key)
 - [x] Station detail view: demand curve — `/stations/[id]`, 7d/30d/90d/all-time range toggle
 - [x] City-wide trends view — `/trends`, system-wide hourly demand + weekday/weekend comparison
 - [x] Insight report page (numbers + confidence intervals) — `/insights`, live rebalancing ranking + live weekday/weekend test + Phase 3 findings
-- [ ] Resolve deployment open question #3 (PostGIS on free tier)
-- [ ] Deploy: Postgres (Neon/Supabase), API (Render), frontend (Vercel)
+- [x] Resolve deployment open question #3 (PostGIS on free tier) — Neon free tier supports PostGIS; the real constraint was size (25 GB warehouse vs. 512 MB), solved by shipping only the rollups
+- [x] Deploy: Postgres (Neon), API (Render), frontend (Vercel) — all free tier, see PROGRESS_LOG 2026-09-21
 
 Building the dashboard surfaced three dashboard-page-load-blocking API
 queries (fine as one-off analysis scripts, not as live page loads) —
@@ -80,7 +80,7 @@ load in well under 200ms end-to-end.
       Phase 7, which owns deployment verification)
 - [x] Resume bullet(s) drafted from actual delivered scope (not the pitch) — see RESULTS.md "Resume-ready summary"
 
-## Phase 7 — Polish & presentation 🟡 in progress
+## Phase 7 — Polish & presentation ✅
 - [x] All 6 dashboard screenshots embedded in README (map, station
       detail, trends, insights, simulator, compare). The map's earlier
       blank basemap was misdiagnosed here as a headless-capture limit; it
@@ -121,7 +121,7 @@ New stretch ideas worth considering if more time remains:
       days >2 std. deviations from their weekday/weekend baseline
       automatically rather than only when someone happens to notice a
       gap.
-- [ ] Expose station clustering (query 6) results as a filterable list
-      alongside the map's typology color mode — e.g. "show only
-      commuter-hub stations" — the data already exists in
-      `station_typology_agg`, this is a small UI addition on top of it.
+- [x] Expose station clustering (query 6) results as a filterable list
+      alongside the map's typology color mode — the typology legend is now
+      a per-city filter with station counts: click a type to show only
+      those stations, click again to clear.

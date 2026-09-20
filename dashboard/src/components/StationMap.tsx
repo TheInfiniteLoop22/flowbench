@@ -47,6 +47,10 @@ type Selected = {
 export function StationMap() {
   const searchParams = useSearchParams();
   const city = (searchParams.get("city") === "chicago" ? "chicago" : "new_york") as City;
+  return <StationMapInner key={city} city={city} />;
+}
+
+function StationMapInner({ city }: { city: City }) {
   const mapRef = useRef<MapRef>(null);
   const [mode, setMode] = useState<Mode>("imbalance");
   const [hour, setHour] = useState(8);
@@ -56,36 +60,48 @@ export function StationMap() {
   const [retry, setRetry] = useState(0);
   const [imbalance, setImbalance] = useState<StationImbalance[]>([]);
   const [selected, setSelected] = useState<Selected | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settledKey, setSettledKey] = useState("");
   const [query, setQuery] = useState("");
+  const [typologyFilter, setTypologyFilter] = useState<string | null>(null);
+  const imbalanceKey = `${hour}|${retry}`;
+  const loading = mode === "imbalance" && settledKey !== imbalanceKey;
 
   useEffect(() => {
-    setSelected(null);
-    setQuery("");
-    setStationsState("loading");
+    let stale = false;
     api
       .stations(city)
       .then((rows) => {
+        if (stale) return;
         setStations(rows);
         setStationsState("ready");
       })
       .catch(() => {
+        if (stale) return;
         setStations([]);
         setStationsState("error");
       });
+    return () => {
+      stale = true;
+    };
   }, [city, retry]);
 
   useEffect(() => {
     if (mode !== "imbalance") return;
-    setLoading(true);
+    let stale = false;
     api
       .networkImbalance(hour, city)
       .then((rows) => {
+        if (stale) return;
         setImbalance(rows);
-        setLoading(false);
+        setSettledKey(imbalanceKey);
       })
-      .catch(() => setLoading(false));
-  }, [hour, mode, city, retry]);
+      .catch(() => {
+        if (!stale) setSettledKey(imbalanceKey);
+      });
+    return () => {
+      stale = true;
+    };
+  }, [hour, mode, city, imbalanceKey]);
 
   useEffect(() => {
     if (!playing || mode !== "imbalance") return;
@@ -103,7 +119,7 @@ export function StationMap() {
       return {
         type: "FeatureCollection" as const,
         features: stations
-          .filter((s) => s.typology)
+          .filter((s) => s.typology && (!typologyFilter || s.typology === typologyFilter))
           .map((s) => ({
             type: "Feature" as const,
             geometry: { type: "Point" as const, coordinates: [s.lon, s.lat] },
@@ -126,7 +142,13 @@ export function StationMap() {
           },
         })),
     };
-  }, [stations, balanceById, mode]);
+  }, [stations, balanceById, mode, typologyFilter]);
+
+  const typologyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of stations) if (s.typology) counts[s.typology] = (counts[s.typology] ?? 0) + 1;
+    return counts;
+  }, [stations]);
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -338,7 +360,10 @@ export function StationMap() {
                 <div className="text-sm font-medium">Couldn&apos;t reach the data API</div>
                 <p className="text-xs text-muted">It may still be waking up from idle.</p>
                 <button
-                  onClick={() => setRetry((n) => n + 1)}
+                  onClick={() => {
+                    setStationsState("loading");
+                    setRetry((n) => n + 1);
+                  }}
                   className="rounded-lg bg-accent-soft px-4 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
                 >
                   Try again
@@ -349,7 +374,11 @@ export function StationMap() {
         </div>
       )}
 
-      <div className="pointer-events-none absolute bottom-8 left-3 rounded-xl sm:bottom-4 border border-border bg-surface/90 px-3 py-2 text-xs text-muted backdrop-blur sm:left-4">
+      <div
+        className={`absolute bottom-8 left-3 rounded-xl border border-border bg-surface/90 px-3 py-2 text-xs text-muted backdrop-blur sm:bottom-4 sm:left-4 ${
+          mode === "typology" ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+      >
         {mode === "imbalance" ? (
           <div className="w-44">
             <div className="text-[11px] uppercase tracking-wide">Avg net bikes / hour</div>
@@ -364,12 +393,29 @@ export function StationMap() {
             <div className="mt-1 text-[11px]">Bigger dot = bigger imbalance</div>
           </div>
         ) : (
-          Object.entries(TYPOLOGY_COLOR).map(([label, color]) => (
-            <div key={label} className="flex items-center gap-2 not-first:mt-1">
-              <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
-              {label}
+          <div className="w-44">
+            <div className="text-[11px] uppercase tracking-wide">Station type</div>
+            {Object.entries(TYPOLOGY_COLOR).map(([label, color]) => {
+              const active = typologyFilter === label;
+              return (
+                <button
+                  key={label}
+                  onClick={() => setTypologyFilter(active ? null : label)}
+                  aria-pressed={active}
+                  className={`mt-1 flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-surface-2 ${
+                    typologyFilter && !active ? "opacity-45" : ""
+                  } ${active ? "bg-accent-soft text-foreground" : ""}`}
+                >
+                  <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
+                  <span className="flex-1">{label}</span>
+                  <span className="tabular-nums">{(typologyCounts[label] ?? 0).toLocaleString()}</span>
+                </button>
+              );
+            })}
+            <div className="mt-1 px-1.5 text-[11px]">
+              {typologyFilter ? "Click again to show all" : "Click a type to filter the map"}
             </div>
-          ))
+          </div>
         )}
       </div>
     </div>

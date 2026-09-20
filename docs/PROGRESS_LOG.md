@@ -516,6 +516,29 @@ items remain in PHASE_PLAN.md.
 - Per-page tab titles, focus-visible outlines, aria labels.
 - **Not verified**: the error-boundary and map-retry states were not
   exercised (needs a failing API); keep-warm only runs once merged to the
-  default branch. `npm run lint` reports 6 `react-hooks/set-state-in-effect`
-  errors that pre-date this pass (same 6 on the previous commit) — `next
-  build` doesn't run lint, so they don't block deploys.
+  default branch. `npm run lint` reported 6 errors that pre-dated
+  this pass (fixed in the follow-up below).
+
+### Follow-up: lint, typology filter
+
+- `npm run lint` is now clean. Loading flags are derived from a "settled key"
+  instead of being set synchronously inside effects (also guards against
+  out-of-order responses); the map is split into a wrapper + `key={city}`
+  inner component so a city switch remounts instead of resetting state in an
+  effect; two apostrophes escaped in `/compare`.
+- Typology filter shipped (the small PHASE_PLAN stretch item): the map's
+  typology legend is now clickable with per-type counts. Anomaly annotations
+  deliberately not done (larger scope).
+- **Data note, not fixed**: NYC typology counts on the map are 299 commuter-hub
+  / 247 leisure / 1,815 mixed, vs. 330 / 275 / 1,756 in RESULTS.md (same
+  2,361 stations). `station_typology_agg` (migration 0008) computes its
+  terciles over all stations in the warehouse, so once Chicago was added the
+  cut-offs became two-city, while RESULTS.md's numbers are the NYC-only
+  Phase 3 run. Fix would be per-city terciles in the rollup — not done here.
+- **Not done**: Neon password rotation. The permission classifier blocked the
+  Neon password reset (secret-store write); do it manually in the Neon
+  console and update `DATABASE_URL` in Render, since the current password
+  appeared in a chat transcript.
+- Observed: the scheduled keep-warm hadn't fired ~75 min after the first
+  push (only the manual run had); GitHub often delays a new workflow's first
+  scheduled run. The API cold-started in ~12 s in the meantime.

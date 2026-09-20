@@ -50,8 +50,8 @@ export default async function ComparePage() {
           <StatTile label="Chicago stations" value={(chi?.station_count ?? 0).toLocaleString()} />
         </div>
         <p className="mt-3 text-xs text-muted">
-          NYC's network moves {nyc && chi ? (nyc.trip_count / chi.trip_count).toFixed(1) : "…"}x
-          Chicago's trip volume on {nyc && chi ? (nyc.station_count / chi.station_count).toFixed(1) : "…"}x
+          NYC&apos;s network moves {nyc && chi ? (nyc.trip_count / chi.trip_count).toFixed(1) : "…"}x
+          Chicago&apos;s trip volume on {nyc && chi ? (nyc.station_count / chi.station_count).toFixed(1) : "…"}x
           the station count.
         </p>
       </Card>
