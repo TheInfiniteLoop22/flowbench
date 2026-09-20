@@ -99,6 +99,10 @@ below is at [docs/flowbench-insight-report.pdf](docs/flowbench-insight-report.pd
 
 ## Screenshots
 
+| Network map — stations coloured by net bike imbalance (NYC, 08:00) |
+|---|
+| ![Network map](docs/screenshots/map.png) |
+
 | Station detail — demand curve + forecast | City-wide trends |
 |---|---|
 | ![Station detail](docs/screenshots/station-detail.png) | ![Trends](docs/screenshots/trends.png) |
@@ -110,10 +114,6 @@ below is at [docs/flowbench-insight-report.pdf](docs/flowbench-insight-report.pd
 | Cross-city comparison (NYC vs. Chicago) |
 |---|
 | ![Compare](docs/screenshots/compare.png) |
-
-The map view (`/`) isn't pictured here — its WebGL basemap didn't render
-under headless browser automation in this pass; it renders correctly in
-a normal browser at `localhost:3000`.
 
 ## Docs
 

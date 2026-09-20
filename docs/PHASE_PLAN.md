@@ -81,21 +81,19 @@ load in well under 200ms end-to-end.
 - [x] Resume bullet(s) drafted from actual delivered scope (not the pitch) — see RESULTS.md "Resume-ready summary"
 
 ## Phase 7 — Polish & presentation 🟡 in progress
-- [x] 5 of 6 dashboard screenshots embedded in README (station detail,
-      trends, insights, simulator, compare) — the map view's WebGL
-      basemap rendered blank under headless Playwright automation in
-      this sandboxed environment (tile requests returned 200, controls
-      painted, canvas stayed black — a headless-GPU capture limitation,
-      not an app bug). Retry manually in a real browser, or revisit with
-      a different capture tool, to get the 6th.
+- [x] All 6 dashboard screenshots embedded in README (map, station
+      detail, trends, insights, simulator, compare). The map's earlier
+      blank basemap was misdiagnosed here as a headless-capture limit; it
+      was a real bug (maplibre-gl v6 worker not loaded under Turbopack),
+      fixed and captured from the live site.
 - [x] One-page insight report exported (PDF) — [docs/flowbench-insight-report.pdf](../docs/flowbench-insight-report.pdf),
       a `page.pdf()` print of the live `/insights` route
 - [x] Live demo links (frontend + API docs) verified working from a clean
       browser session — https://flowbench-eight.vercel.app (Vercel) and
       https://flowbench-api-c2z8.onrender.com/docs (Render), backed by Neon.
-      All pages except the map verified via Playwright against the live API;
-      the map's basemap canvas rendered blank in the automated browser (see
-      PROGRESS_LOG 2026-09-21) and needs a manual look in a real browser.
+      All pages verified via Playwright against the live API, including the
+      map (NYC + Chicago) after fixing a real blank-basemap bug — see
+      PROGRESS_LOG 2026-09-21.
 - [x] Performance benchmark write-up (from Phase 4) added to RESULTS.md — see [RESULTS.md#performance](docs/RESULTS.md#performance)
 - [x] Final pass: does a reader with zero context get the headline finding
       in under a minute from the README alone? If not, fix the README, not

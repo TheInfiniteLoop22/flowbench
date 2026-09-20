@@ -477,13 +477,20 @@ https://flowbench-api-c2z8.onrender.com, Postgres on Neon (144 MB of the
   then redeploying.
 - Playwright check of the live site: Trends, Insights, Compare, Simulator
   and station detail all render real data with no console errors.
-  **Open item**: the `/` map's basemap canvas stays black in the automated
-  browser — WebGL is available (real GPU), style/sprite requests return
-  200, but no vector-tile requests are made and no station circles draw.
-  Same symptom as the earlier headless capture, so likely a
-  capture-environment limit, but unconfirmed; needs a manual look in a
-  normal browser. The map screenshot in the README is still missing.
+- **Map was blank — a real bug, not a capture limit.** I first recorded it
+  as a probable headless-browser artifact; the user then confirmed the map
+  was blank in their own browser too, in both cities. Root cause: maplibre-gl
+  v6 loads its web worker from a separate `.mjs` file that Turbopack doesn't
+  emit, so the style/sprite loaded but no tile was ever requested (tile
+  fetching happens in the worker) and no console error appeared. Fix:
+  `dashboard/scripts/copy-maplibre-worker.mjs` copies the worker + its shared
+  chunk into `public/maplibre/` at predev/prebuild, and `StationMap.tsx`
+  calls `setWorkerUrl`. Verified locally, then on the live site: basemap
+  tiles render and stations draw for both NYC and Chicago. The earlier
+  session's "headless-GPU limitation" explanation for the same symptom
+  was wrong. Sixth screenshot (`docs/screenshots/map.png`) captured from
+  the live site.
 - Render free tier sleeps after ~15 min idle (first request ~30–50 s).
 
-**Next**: manually confirm the map renders in a real browser and grab the
-sixth screenshot; if the map is also blank there, debug `StationMap.tsx`.
+**Next**: nothing blocking — project is deployed and verified. Optional stretch
+items remain in PHASE_PLAN.md.
