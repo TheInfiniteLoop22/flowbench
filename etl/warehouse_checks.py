@@ -34,6 +34,15 @@ def main():
             print(f"dropped (FB-002 bad duration + FB-003 duplicate ride_id): "
                   f"{staging_count - fact_count:,}\n")
 
+            cur.execute("""
+                SELECT city, count(*), count(DISTINCT start_station_id)
+                FROM warehouse.fact_trips GROUP BY city ORDER BY city
+            """)
+            print("By city:")
+            for city, trips, stations in cur.fetchall():
+                print(f"  {city:12} {trips:>12,} trips  {stations:>6,} stations")
+            print()
+
             print("Referential integrity:")
             check(cur, "fact_trips rows with a start_station_id not in dim_station", """
                 SELECT count(*) FROM warehouse.fact_trips f
@@ -44,6 +53,17 @@ def main():
                 SELECT count(*) FROM warehouse.fact_trips f
                 WHERE f.end_station_id IS NOT NULL
                 AND NOT EXISTS (SELECT 1 FROM warehouse.dim_station s WHERE s.station_id = f.end_station_id)
+            """)
+            check(cur, "fact_trips rows whose city doesn't match their start_station's city", """
+                SELECT count(*) FROM warehouse.fact_trips f
+                JOIN warehouse.dim_station s ON s.station_id = f.start_station_id
+                WHERE s.city != f.city
+            """)
+            check(cur, "ride_id collisions across cities (staging)", """
+                SELECT count(*) FROM (
+                    SELECT ride_id FROM staging.stg_trips_raw
+                    GROUP BY ride_id HAVING count(DISTINCT city) > 1
+                ) x
             """)
             check(cur, "fact_trips rows with a start_date not in dim_time", """
                 SELECT count(*) FROM warehouse.fact_trips f

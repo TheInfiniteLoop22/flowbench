@@ -1,9 +1,16 @@
 # FlowBench ETL (Phase 1: data + staging)
 
-Downloads Citi Bike's public monthly trip-data zips (no API key) and
-loads them into `staging.stg_trips_raw` in Postgres, raw and untyped
-beyond basic column types — no cleaning at this stage. See
+Downloads a city's public monthly trip-data zips (no API key) and loads
+them into `staging.stg_trips_raw` in Postgres, raw and untyped beyond
+basic column types — no cleaning at this stage. See
 [docs/SPEC.md](../docs/SPEC.md) §2–3 for the schema and rationale.
+
+Two cities are supported (second-city stretch, see
+[docs/PHASE_PLAN.md](../docs/PHASE_PLAN.md)): NYC's Citi Bike (default)
+and Chicago's Divvy — both Lyft/Motivate-operated systems publishing the
+same 13-column schema. One real format difference: Divvy quotes every
+CSV field including the header row; Citi Bike doesn't. The loader
+handles both.
 
 ## Setup
 
@@ -18,8 +25,11 @@ python etl/run_migrations.py  # creates staging schema/tables
 ## Load data
 
 ```bash
-# download + load a range of months (YYYYMM, inclusive)
+# download + load a range of months (YYYYMM, inclusive) — defaults to --city new_york
 python etl/download_and_load.py --start 202509 --end 202608
+
+# the second city
+python etl/download_and_load.py --city chicago --start 202509 --end 202608
 
 # keep the downloaded zips on disk instead of deleting after load
 python etl/download_and_load.py --start 202509 --end 202608 --keep-raw
