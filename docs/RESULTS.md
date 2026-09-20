@@ -180,21 +180,25 @@ nice corroboration of query 9's precipitation-demand correlation finding.
 
 ## Presentation artifacts
 
-- [ ] Live dashboard: *link TBD — currently local only (`localhost:3000`)*
-- [ ] Live API docs: *link TBD — currently local only (`localhost:8000/docs`)*
+- [x] Live dashboard: https://flowbench-eight.vercel.app (Vercel, free tier)
+- [x] Live API docs: https://flowbench-api-c2z8.onrender.com/docs (Render free tier; Postgres on Neon free tier — the API can take up to a minute to wake after idle)
 - [x] One-page insight report: [docs/flowbench-insight-report.pdf](flowbench-insight-report.pdf) (PDF export of the `/insights` dashboard route)
-- [x] Screenshots: [docs/screenshots/](screenshots/) — station detail, trends, insights, simulator, compare (5 of 6 pages; the map view's WebGL basemap didn't render under headless browser automation, see [docs/PHASE_PLAN.md](PHASE_PLAN.md))
+- [x] Screenshots: [docs/screenshots/](screenshots/) — map, station detail, trends, insights, simulator, compare (all 6 pages, captured from the live site)
 
 ## Resume-ready summary
 
-Built an end-to-end bike-share analytics platform (ELT → star-schema
-warehouse → FastAPI → Next.js dashboard) processing **51.8M trips across
-two cities** (NYC Citi Bike, Chicago Divvy) over a 12-month window,
-producing a ranked rebalancing-ROI recommendation (top candidates recover
-~90–130 lost trips per truck-hour), 6+ statistically validated findings
-(each with a p-value or confidence interval), and a documented ~445x query
-optimization (667.9ms → 1.5ms) backed by `EXPLAIN ANALYZE` before/after.
-Caught and fixed 4 real data-integrity bugs during analysis (station-ID
-duplication, a flawed forecast-model-selection heuristic, a degenerate ROI
-metric, a city-blending risk in shared rollups) before they became wrong
-results, rather than after.
+Built and deployed an end-to-end bike-share analytics platform (ELT →
+PostGIS star-schema warehouse → FastAPI → Next.js/MapLibre dashboard)
+covering **51.8M trips across two cities** (NYC Citi Bike, Chicago Divvy)
+over a 12-month window, live on free-tier Vercel, Render and Neon. Produced
+a ranked rebalancing-ROI recommendation (the top 20 stations each recover an
+estimated ~90–130 lost trips per truck-hour — a modeled estimate from
+inferred stockout periods, not an observed count) and ran six hypothesis
+tests with reported p-values (five significant, one not — Chicago's
+weekday/weekend effect), choosing t-test vs. Mann-Whitney via a
+Shapiro-Wilk normality check. Cut a key API query ~445x (667.9 ms → 1.5 ms,
+`EXPLAIN ANALYZE` before/after) with precomputed rollups, and used the same
+approach to shrink the deployed database from ~25 GB to ~144 MB so it fits a
+free tier. Found and fixed several data-integrity bugs before they reached
+results (duplicate station IDs, a flawed forecast-model-selection heuristic,
+a degenerate ROI metric, and rollups that silently blended two cities).

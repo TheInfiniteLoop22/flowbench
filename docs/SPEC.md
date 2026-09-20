@@ -31,8 +31,8 @@ Last updated: 2026-09-17
 |---|---|---|
 | 1 | Exact 12-month window | **Resolved in Phase 1** — 2025-09 through 2026-08 (most recent complete 12 months at build time). Confirmed single, consistent CSV schema across the whole window (see §2.1). |
 | 2 | `station_id` stability / type | **Resolved in Phase 1** — `start_station_id`/`end_station_id` are **text**, not integers (e.g. `"6527.07"`), and can be null for a small fraction of rows. `dim_station.station_id` is typed `text` accordingly (§3.2 updated). |
-| 3 | Whether PostGIS is available on the free tier of the chosen host (Neon vs Supabase) at the time of deployment | Open — Phase 5 (deployment) |
-| 4 | Forecasting baseline: moving average vs. simple linear regression — pick based on what the EDA in Phase 3 actually shows (don't decide before seeing the data) | Open — Phase 3 |
+| 3 | Whether PostGIS is available on the free tier of the chosen host (Neon vs Supabase) at the time of deployment | **Resolved in Phase 5** — Neon's free tier supports PostGIS (`dim_station.geom` is a real `geometry(Point,4326)` in production). The actual constraint was size, not extensions: the ~25 GB warehouse can't fit a 512 MB free database, so production holds only the precomputed rollups + dimensions (~144 MB) and the raw `fact_trips` stays local — see PROGRESS_LOG 2026-09-21. |
+| 4 | Forecasting baseline: moving average vs. simple linear regression — pick based on what the EDA in Phase 3 actually shows (don't decide before seeing the data) | **Resolved in Phase 3** — 7-day moving average, chosen empirically on a validation holdout (test MAE 19,423, MAPE 12.4%); see RESULTS.md. |
 
 ### 2.1 Confirmed source schema (Phase 1 finding)
 

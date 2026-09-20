@@ -10,7 +10,8 @@ Legend: ⬜ not started · 🟡 in progress · ✅ done · ❌ cut/deferred
 ## Phase 0 — Repo & docs setup
 - [x] Repo structure, README, docs suite (this file, SPEC, bug tracker, progress log, ADRs)
 - [x] GitHub repo created and pushed
-- [ ] `.gitignore`, license (optional)
+- [x] `.gitignore`
+- [ ] License (optional — not added)
 
 ## Phase 1 — Data + staging ✅
 - [x] Identify and download a bounded date range of Citi Bike CSVs (target: 12 months) — 2025-09 through 2026-08
