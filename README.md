@@ -19,14 +19,13 @@ argument: [new-project-proposal.md](new-project-proposal.md).
 
 ## Status
 
-🟡 **In progress** — Phases 1–6 complete (data, warehouse, analysis, API,
-dashboard, write-up), Phase 7 (polish & presentation) in progress: 51.8M
+✅ **Deployed** — Phases 1–7 complete (data, warehouse, analysis, API,
+dashboard, write-up, deployment): 51.8M
 trips across two cities (45.7M NYC Citi Bike + 6.1M Chicago Divvy) staged
 into a star-schema warehouse, a 10-query analysis library (including a
 cross-city comparison), a read-only FastAPI service, and a Next.js
 dashboard (map, station detail, trends, insight report, simulator, city
-switcher, cross-city comparison) — built and running locally, not yet
-deployed. See [docs/PROGRESS_LOG.md](docs/PROGRESS_LOG.md) for the live
+switcher, cross-city comparison), live on Vercel + Render + Neon. See [docs/PROGRESS_LOG.md](docs/PROGRESS_LOG.md) for the live
 status, [docs/RESULTS.md](docs/RESULTS.md) for numbers, and
 [docs/PHASE_PLAN.md](docs/PHASE_PLAN.md) for what's next.
 
@@ -86,11 +85,17 @@ Dashboard routes (`dashboard/src/app/`):
 | `/simulator` | "What-if" rebalancing simulator with live sliders |
 | `/compare` | Cross-city comparison (NYC vs. Chicago) |
 
-Live deployment links are tracked as an open Phase 7 item (see
-[docs/PHASE_PLAN.md](docs/PHASE_PLAN.md)) — the app currently runs locally
-via Docker Compose, not yet on public infra. A one-page PDF version of the
-insight report below is at
-[docs/flowbench-insight-report.pdf](docs/flowbench-insight-report.pdf).
+**Live demo** (all on free tiers):
+
+- Dashboard: https://flowbench-eight.vercel.app
+- API docs: https://flowbench-api-c2z8.onrender.com/docs
+
+The API runs on Render's free tier and sleeps after ~15 minutes idle, so
+the first request after a quiet period can take 30–50 seconds. Production
+Postgres (Neon, free tier) holds only the precomputed rollup tables and
+dimensions (~144 MB); the 17 GB raw `fact_trips` table stays local, and
+no live endpoint queries it. A one-page PDF version of the insight report
+below is at [docs/flowbench-insight-report.pdf](docs/flowbench-insight-report.pdf).
 
 ## Screenshots
 

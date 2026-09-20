@@ -446,3 +446,44 @@ rendering, popup behavior, chart legibility, the new city switcher/
 finish Phase 6 (README architecture + screenshots + live links, currently
 blocked on Phase 5's deployment step which still hasn't happened); then
 Phase 7 polish.
+
+---
+
+## 2026-09-21 — Deployed: Neon + Render + Vercel, all free tier
+
+**Status**: Phase 5/7 deployment ✅ done. Dashboard
+https://flowbench-eight.vercel.app, API
+https://flowbench-api-c2z8.onrender.com, Postgres on Neon (144 MB of the
+512 MB free limit).
+
+- **Resolved SPEC.md open question #3 by not needing it to be a size
+  question**: the full warehouse is ~25 GB (17 GB `fact_trips`), which no
+  free Postgres tier holds. Audited what the live API actually queries and
+  found every endpoint runs on small rollups + `dim_station`/`dim_time`
+  except three that still scanned `fact_trips` live (`/stations/{id}/demand`,
+  the forecast's daily series, `/cities`). Added migrations `0011`
+  (`station_daily_demand_agg`, `station_hourly_demand_agg`) and `0012`
+  (`city_stats_agg`) so raw `fact_trips` never ships to production.
+- `/stations/{id}/demand` now only accepts `range` in {7, 30, 90} (or
+  omitted for all-time) — the four buckets the dashboard offers are
+  precomputed; arbitrary N would have needed per-day-per-hour granularity,
+  roughly `fact_trips`-sized again. Other values return 422. Tests: 21 pass.
+- Verified the deployed API returns numbers identical to RESULTS.md
+  (p=0.0044, +16.7% weekday/weekend, 127 lost-trips/truck-hour top ranking).
+- **Vercel deploy initially 404'd on every route** (`X-Vercel-Error:
+  NOT_FOUND`): the project had Framework Preset "Other" and no Root
+  Directory, so Vercel built the repo root (no app) and reported "Ready".
+  Fixed by setting Root Directory to `dashboard` and Framework to Next.js,
+  then redeploying.
+- Playwright check of the live site: Trends, Insights, Compare, Simulator
+  and station detail all render real data with no console errors.
+  **Open item**: the `/` map's basemap canvas stays black in the automated
+  browser — WebGL is available (real GPU), style/sprite requests return
+  200, but no vector-tile requests are made and no station circles draw.
+  Same symptom as the earlier headless capture, so likely a
+  capture-environment limit, but unconfirmed; needs a manual look in a
+  normal browser. The map screenshot in the README is still missing.
+- Render free tier sleeps after ~15 min idle (first request ~30–50 s).
+
+**Next**: manually confirm the map renders in a real browser and grab the
+sixth screenshot; if the map is also blank there, debug `StationMap.tsx`.

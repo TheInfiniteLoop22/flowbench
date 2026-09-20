@@ -90,9 +90,12 @@ load in well under 200ms end-to-end.
       a different capture tool, to get the 6th.
 - [x] One-page insight report exported (PDF) — [docs/flowbench-insight-report.pdf](../docs/flowbench-insight-report.pdf),
       a `page.pdf()` print of the live `/insights` route
-- [ ] Live demo links (frontend + API docs) verified working from a clean
-      browser session, not just localhost — deferred, needs deployment
-      (Neon/Render/Vercel accounts) which the user chose to skip this pass
+- [x] Live demo links (frontend + API docs) verified working from a clean
+      browser session — https://flowbench-eight.vercel.app (Vercel) and
+      https://flowbench-api-c2z8.onrender.com/docs (Render), backed by Neon.
+      All pages except the map verified via Playwright against the live API;
+      the map's basemap canvas rendered blank in the automated browser (see
+      PROGRESS_LOG 2026-09-21) and needs a manual look in a real browser.
 - [x] Performance benchmark write-up (from Phase 4) added to RESULTS.md — see [RESULTS.md#performance](docs/RESULTS.md#performance)
 - [x] Final pass: does a reader with zero context get the headline finding
       in under a minute from the README alone? If not, fix the README, not
