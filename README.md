@@ -90,8 +90,10 @@ Dashboard routes (`dashboard/src/app/`):
 - Dashboard: https://flowbench-eight.vercel.app
 - API docs: https://flowbench-api-c2z8.onrender.com/docs
 
-The API runs on Render's free tier and sleeps after ~15 minutes idle, so
-the first request after a quiet period can take 30–50 seconds. Production
+The API runs on Render's free tier, which sleeps after ~15 minutes idle
+(a cold start takes 30–50 seconds); a scheduled GitHub Action
+([keep-warm](.github/workflows/keep-warm.yml)) pings it every 10 minutes to
+keep it awake, and the dashboard shows loading/retry states if it isn't. Production
 Postgres (Neon, free tier) holds only the precomputed rollup tables and
 dimensions (~144 MB); the 17 GB raw `fact_trips` table stays local, and
 no live endpoint queries it. A one-page PDF version of the insight report

@@ -1,0 +1,18 @@
+name: keep-warm
+
+# Render's free tier sleeps the API after ~15 min idle, and a cold start takes
+# 30-50 s. Ping a DB-backed endpoint every 10 min so demo visitors don't hit it.
+# (Also keeps Neon's compute warm.) GitHub pauses scheduled workflows after 60
+# days without repo activity -- re-enable from the Actions tab if that happens.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping API
+        run: curl --fail --silent --show-error --max-time 90 --retry 2 https://flowbench-api-c2z8.onrender.com/cities

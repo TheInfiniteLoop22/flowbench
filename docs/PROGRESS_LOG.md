@@ -494,3 +494,28 @@ https://flowbench-api-c2z8.onrender.com, Postgres on Neon (144 MB of the
 
 **Next**: nothing blocking — project is deployed and verified. Optional stretch
 items remain in PHASE_PLAN.md.
+
+---
+
+## 2026-09-21 — UX pass + keep-warm
+
+**Status**: dashboard polish ✅ done, deployed via push to `main`.
+
+- Audit found real problems, not just polish: on phones the top nav overflowed
+  sideways (Insights/Simulator/Compare unreachable), the city switcher was
+  hidden below `md` (no way to reach Chicago), and the insights table clipped
+  its headline column. Fixed with a bottom tab bar + city switcher in the top
+  bar, and by hiding two secondary table columns on small screens.
+- Server-rendered pages fetch the API during render; a sleeping Render free
+  tier (30–50 s cold start) risked slow/failed first loads with no feedback.
+  Added a route-level loading skeleton, an error boundary with retry,
+  `maxDuration = 60`, and a GitHub Actions keep-warm ping every 10 min.
+- Map: station search (fly-to + popup), play-through-the-day animation,
+  colour-scale/dot-size legend, loading/retry overlay; near-zero balances now
+  show a neutral `0.0` instead of a red `-0.0`.
+- Per-page tab titles, focus-visible outlines, aria labels.
+- **Not verified**: the error-boundary and map-retry states were not
+  exercised (needs a failing API); keep-warm only runs once merged to the
+  default branch. `npm run lint` reports 6 `react-hooks/set-state-in-effect`
+  errors that pre-date this pass (same 6 on the previous commit) — `next
+  build` doesn't run lint, so they don't block deploys.
