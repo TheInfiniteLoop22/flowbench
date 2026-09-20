@@ -61,10 +61,13 @@ function StationMapInner({ city }: { city: City }) {
   const [imbalance, setImbalance] = useState<StationImbalance[]>([]);
   const [selected, setSelected] = useState<Selected | null>(null);
   const [settledKey, setSettledKey] = useState("");
+  const [imbalanceFailed, setImbalanceFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [typologyFilter, setTypologyFilter] = useState<string | null>(null);
   const imbalanceKey = `${hour}|${retry}`;
   const loading = mode === "imbalance" && settledKey !== imbalanceKey;
+  const showError = stationsState === "error" || (mode === "imbalance" && imbalanceFailed && !loading);
+  const showLoading = stationsState === "loading" && !showError;
 
   useEffect(() => {
     let stale = false;
@@ -93,10 +96,13 @@ function StationMapInner({ city }: { city: City }) {
       .then((rows) => {
         if (stale) return;
         setImbalance(rows);
+        setImbalanceFailed(false);
         setSettledKey(imbalanceKey);
       })
       .catch(() => {
-        if (!stale) setSettledKey(imbalanceKey);
+        if (stale) return;
+        setImbalanceFailed(true);
+        setSettledKey(imbalanceKey);
       });
     return () => {
       stale = true;
@@ -347,10 +353,10 @@ function StationMapInner({ city }: { city: City }) {
         )}
       </div>
 
-      {stationsState !== "ready" && (
+      {(showLoading || showError) && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
           <div className="pointer-events-auto max-w-sm space-y-3 rounded-2xl border border-border bg-surface/95 p-5 text-center shadow-xl backdrop-blur">
-            {stationsState === "loading" ? (
+            {showLoading ? (
               <>
                 <div className="text-sm font-medium">Loading stations&hellip;</div>
                 <ColdStartNote />
@@ -362,6 +368,7 @@ function StationMapInner({ city }: { city: City }) {
                 <button
                   onClick={() => {
                     setStationsState("loading");
+                    setImbalanceFailed(false);
                     setRetry((n) => n + 1);
                   }}
                   className="rounded-lg bg-accent-soft px-4 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20"

@@ -542,3 +542,8 @@ items remain in PHASE_PLAN.md.
 - Observed: the scheduled keep-warm hadn't fired ~75 min after the first
   push (only the manual run had); GitHub often delays a new workflow's first
   scheduled run. The API cold-started in ~12 s in the meantime.
+- Map now also shows the retry overlay when the imbalance request fails (it
+  previously left an empty map silently — seen once on the live site as a
+  transient cold-start failure). The map overlay and the route-level error
+  page were both exercised by building against an unreachable API; they
+  render correctly.
