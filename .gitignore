@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.local.example
 __pycache__/
 *.pyc
 .venv/
@@ -16,3 +17,4 @@ data/raw/
 data/staging/
 *.duckdb
 *.sqlite
+analysis/output/
