@@ -14,10 +14,12 @@ station-keyed and would have silently blended both cities' totals — see
 FB-010 in docs/BUG_TRACKER.md and warehouse/migrations/0010_*.sql.
 """
 
+# Backed by warehouse.city_stats_agg (warehouse/migrations/0012_*.sql)
+# instead of a live fact_trips scan -- see 0011_*.sql's note, fact_trips
+# itself (17GB) doesn't ship to production.
 CITIES = """
-    SELECT city, count(*) AS trip_count, count(DISTINCT start_station_id) AS station_count
-    FROM warehouse.fact_trips
-    GROUP BY city
+    SELECT city, trip_count, station_count
+    FROM warehouse.city_stats_agg
     ORDER BY trip_count DESC
 """
 
