@@ -529,12 +529,15 @@ items remain in PHASE_PLAN.md.
 - Typology filter shipped (the small PHASE_PLAN stretch item): the map's
   typology legend is now clickable with per-type counts. Anomaly annotations
   deliberately not done (larger scope).
-- **Data note, not fixed**: NYC typology counts on the map are 299 commuter-hub
-  / 247 leisure / 1,815 mixed, vs. 330 / 275 / 1,756 in RESULTS.md (same
-  2,361 stations). `station_typology_agg` (migration 0008) computes its
-  terciles over all stations in the warehouse, so once Chicago was added the
-  cut-offs became two-city, while RESULTS.md's numbers are the NYC-only
-  Phase 3 run. Fix would be per-city terciles in the rollup — not done here.
+- **Typology counts mismatch — fixed (FB-012)**: the map showed NYC as 299
+  commuter-hub / 247 leisure / 1,815 mixed vs. 330 / 275 / 1,756 in
+  RESULTS.md (same 2,361 stations). `station_typology_agg` ran `NTILE(3)` over
+  every station in the warehouse, so adding Chicago shifted NYC's cut-offs;
+  RESULTS.md's numbers were the NYC-only Phase 3 run. Migration 0013 recreates
+  the rollup with `PARTITION BY city`: NYC now reproduces 330 / 275 / 1,756
+  exactly, Chicago is 166 / 140 / 775. Local rollup refreshed (12 s), Neon
+  table replaced in one transaction, live API confirmed, 21 API tests pass.
+  Also corrected FB-010, which had wrongly called this rollup "safe as-is".
 - **Not done**: Neon password rotation. The permission classifier blocked the
   Neon password reset (secret-store write); do it manually in the Neon
   console and update `DATABASE_URL` in Render, since the current password

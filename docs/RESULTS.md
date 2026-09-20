@@ -107,7 +107,10 @@ trips fall in the AM/PM commute windows), 275 leisure stations (e.g. W
 4th St & 7th Ave S, weekend_share_index=1.168 — weekend demand is 17%
 above what an even 7-day spread would predict), 1,756 mixed. Confirms the
 network has a real, quantifiable commuter/leisure split, not just an
-eyeballed one.
+eyeballed one. The terciles are computed per city (the dashboard's
+`station_typology_agg` reproduces these NYC counts exactly); Chicago, ranked
+against Chicago only, comes out at 166 commuter-hub / 140 leisure / 775 mixed
+over 1,081 stations with ≥100 trips.
 
 **Demand curve**: system-wide peak hour is 17:00 (9.2% of daily trips),
 trough is 04:00 (0.35%) — a ~26x swing between busiest and quietest hour.
