@@ -1,7 +1,11 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { api, CITY_LABELS, type City } from "@/lib/api";
 import { Card, StatTile } from "@/components/Card";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Insights" };
+export const maxDuration = 60;
 
 const NYC_FINDINGS = [
   {
@@ -57,9 +61,9 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
                 <th className="py-2 pr-4 font-medium">Station</th>
-                <th className="py-2 pr-4 font-medium text-right">Stockout episodes</th>
+                <th className="hidden py-2 pr-4 font-medium text-right sm:table-cell">Stockout episodes</th>
                 <th className="py-2 pr-4 font-medium text-right">Est. lost trips</th>
-                <th className="py-2 pr-4 font-medium text-right">Truck-hours</th>
+                <th className="hidden py-2 pr-4 font-medium text-right sm:table-cell">Truck-hours</th>
                 <th className="py-2 pl-4 font-medium text-right">Trips / truck-hour</th>
               </tr>
             </thead>
@@ -68,11 +72,16 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
                 <tr key={r.station_id} className="border-b border-border/60 last:border-0">
                   <td className="py-2 pr-4">
                     <span className="mr-2 text-muted">{i + 1}.</span>
-                    {r.name}
+                    <Link
+                      href={`/stations/${encodeURIComponent(r.station_id)}`}
+                      className="text-foreground underline-offset-2 hover:text-accent hover:underline"
+                    >
+                      {r.name}
+                    </Link>
                   </td>
-                  <td className="py-2 pr-4 text-right tabular-nums">{r.stockout_episodes}</td>
+                  <td className="hidden py-2 pr-4 text-right tabular-nums sm:table-cell">{r.stockout_episodes}</td>
                   <td className="py-2 pr-4 text-right tabular-nums">{r.estimated_lost_trips.toFixed(0)}</td>
-                  <td className="py-2 pr-4 text-right tabular-nums">{r.truck_hours_needed.toFixed(1)}</td>
+                  <td className="hidden py-2 pr-4 text-right tabular-nums sm:table-cell">{r.truck_hours_needed.toFixed(1)}</td>
                   <td className="py-2 pl-4 text-right font-medium tabular-nums text-accent">
                     {r.lost_trips_per_truck_hour.toFixed(1)}
                   </td>

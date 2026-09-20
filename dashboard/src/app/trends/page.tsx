@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { api, CITY_LABELS, type City } from "@/lib/api";
 import { Card, StatTile } from "@/components/Card";
 import { DemandCurveChart } from "@/components/DemandCurveChart";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Trends" };
+export const maxDuration = 60;
 
 export default async function TrendsPage({ searchParams }: PageProps<"/trends">) {
   const { city: cityParam } = await searchParams;

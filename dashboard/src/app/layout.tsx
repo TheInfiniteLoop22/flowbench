@@ -15,7 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FlowBench — Bike-Share Rebalancing Analytics",
+  title: {
+    default: "FlowBench — Bike-Share Rebalancing Analytics",
+    template: "%s · FlowBench",
+  },
   description: "Demand, imbalance, and rebalancing insights for a 12-month window of NYC (Citi Bike) and Chicago (Divvy) trip data.",
 };
 
@@ -29,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={<div className="h-14 shrink-0 border-b border-border bg-surface md:h-full md:w-56 md:border-b-0 md:border-r" />}>
           <Nav />
         </Suspense>
-        <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0">{children}</main>
       </body>
     </html>
   );

@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { api } from "@/lib/api";
 import { Card, StatTile } from "@/components/Card";
 import { CityShapeChart } from "@/components/CityShapeChart";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Compare cities" };
+export const maxDuration = 60;
 
 export default async function ComparePage() {
   const [cityStats, nycDemand, chiDemand, nycWvw, chiWvw] = await Promise.all([

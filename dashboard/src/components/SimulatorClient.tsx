@@ -75,7 +75,7 @@ export function SimulatorClient() {
         title="Allocation"
         subtitle={loading ? "recalculating…" : `${sim?.allocations.length ?? 0} stations serviced by this budget`}
       >
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-96 overflow-auto">
           <table className="w-full text-left text-sm">
             <thead className="sticky top-0 bg-surface">
               <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
