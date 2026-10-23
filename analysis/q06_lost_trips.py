@@ -21,7 +21,7 @@ def main():
             print(f"{len(rows):,} stations with at least one likely-empty hour, in {elapsed:.1f}s\n")
 
             total_lost = sum(r[4] for r in rows)
-            cur.execute("SELECT count(*) FROM warehouse.fact_trips")
+            cur.execute("SELECT count(*) FROM warehouse.fact_trips WHERE city = 'new_york'")
             total_trips = cur.fetchone()[0]
             print(f"Estimated total lost trips (network-wide, 12 months): {total_lost:,.0f}")
             print(f"  as a share of observed trips: {total_lost/total_trips:.2%}\n")

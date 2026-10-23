@@ -43,7 +43,7 @@ def main():
             elapsed = time.time() - t0
             print(f"{len(rows)} calendar days in {elapsed:.1f}s")
 
-            cur.execute("SELECT count(*) FROM warehouse.fact_trips")
+            cur.execute("SELECT count(*) FROM warehouse.fact_trips WHERE city = 'new_york'")
             total_trips = cur.fetchone()[0]
             total_here = sum(r[3] for r in rows)
             status = "OK" if total_here == total_trips else "FAIL"
@@ -79,7 +79,7 @@ def main():
         fx = np.arange(len(train), len(train) + len(test))
         return s * fx + i
 
-    # Resolve open question #4 empirically: pick whichever baseline wins a
+    # Pick the model empirically: whichever baseline wins a
     # validation holdout (the 28 days *before* the final test window),
     # then only ever report the final test-window score for the winner —
     # avoids picking a model and grading it on the same data.

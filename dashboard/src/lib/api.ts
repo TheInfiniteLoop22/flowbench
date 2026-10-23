@@ -59,6 +59,8 @@ export type WeekdayVsWeekend = {
   test_used: string;
   statistic: number;
   p_value: number;
+  adjusted_pct_difference: number | null;
+  adjusted_p_value: number | null;
 };
 
 export type RebalancingCandidate = {

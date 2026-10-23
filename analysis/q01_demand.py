@@ -24,7 +24,7 @@ def main():
             # with a resolved start station (the same figure warehouse_checks
             # reports as trips_with_start).
             total_demand = sum(r[2] for r in rows)
-            cur.execute("SELECT count(*) FROM warehouse.fact_trips WHERE start_station_id IS NOT NULL")
+            cur.execute("SELECT count(*) FROM warehouse.fact_trips WHERE start_station_id IS NOT NULL AND city = 'new_york'")
             trips_with_start = cur.fetchone()[0]
             status = "OK" if total_demand == trips_with_start else "FAIL"
             print(f"  [{status}] sum(trip_count) == trips with resolved start_station_id: "

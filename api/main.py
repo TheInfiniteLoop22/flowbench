@@ -29,6 +29,29 @@ from .schemas import (
 # Second-city support: every city-scoped endpoint
 # defaults to "new_york" so the dashboard's existing pages keep working
 # unchanged unless they explicitly ask for "chicago".
+# The source files for 2025-09 also contain a few trips from 30-31 August 2025; those two days are
+# partial, so daily comparisons start on the first complete day.
+ANALYSIS_START = "2025-09-01"
+ADJUST_RADIUS = 14  # days on each side for the centred 29-day mean
+
+
+def seasonally_adjusted_comparison(counts, is_weekend, is_holiday):
+    """Weekday vs weekend after dividing each day by the mean of the surrounding 29 days, so a
+    January Tuesday is compared with January rather than with July. Returns (pct_difference,
+    p_value) or (None, None) when there are too few days."""
+    n = len(counts)
+    weekday, weekend = [], []
+    for i in range(ADJUST_RADIUS, n - ADJUST_RADIUS):
+        if is_holiday[i]:
+            continue
+        ratio = counts[i] / np.mean(counts[i - ADJUST_RADIUS : i + ADJUST_RADIUS + 1])
+        (weekend if is_weekend[i] else weekday).append(ratio)
+    if len(weekday) < 3 or len(weekend) < 3:
+        return None, None
+    _, p_value = stats.mannwhitneyu(weekday, weekend, alternative="two-sided")
+    return float(np.mean(weekday) / np.mean(weekend) - 1), float(p_value)
+
+
 CityQuery = Query("new_york", pattern="^(new_york|chicago)$")
 
 
@@ -169,7 +192,7 @@ def network_imbalance(hour: int = Query(..., ge=0, le=23), city: str = CityQuery
 @app.get("/insights/weekday-vs-weekend", response_model=WeekdayVsWeekend)
 def weekday_vs_weekend(city: str = CityQuery):
     with get_cursor() as cur:
-        cur.execute(queries.WEEKDAY_VS_WEEKEND_DAILY, {"city": city})
+        cur.execute(queries.WEEKDAY_VS_WEEKEND_DAILY, {"city": city, "start_date": ANALYSIS_START})
         rows = cur.fetchall()
 
     weekday = [r[3] for r in rows if not r[1] and not r[2]]
@@ -184,6 +207,9 @@ def weekday_vs_weekend(city: str = CityQuery):
     test_used = "Mann-Whitney U"
     statistic, p_value = stats.mannwhitneyu(weekday, weekend, alternative="two-sided")
 
+    adjusted_pct, adjusted_p = seasonally_adjusted_comparison(
+        [r[3] for r in rows], [r[1] for r in rows], [r[2] for r in rows]
+    )
     wd_mean = sum(weekday) / len(weekday)
     we_mean = sum(weekend) / len(weekend)
     return WeekdayVsWeekend(
@@ -196,6 +222,8 @@ def weekday_vs_weekend(city: str = CityQuery):
         test_used=test_used,
         statistic=float(statistic),
         p_value=float(p_value),
+        adjusted_pct_difference=adjusted_pct,
+        adjusted_p_value=adjusted_p,
     )
 
 

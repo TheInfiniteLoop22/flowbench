@@ -21,7 +21,7 @@ def main():
             elapsed = time.time() - t0
             print(f"{len(rows)} user types in {elapsed:.1f}s\n")
 
-            cur.execute("SELECT count(*) FROM warehouse.fact_trips")
+            cur.execute("SELECT count(*) FROM warehouse.fact_trips WHERE city = 'new_york'")
             total = cur.fetchone()[0]
             total_n = sum(r[cols.index("n")] for r in rows)
             status = "OK" if total_n == total else "FAIL"

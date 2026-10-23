@@ -98,6 +98,7 @@ WEEKDAY_VS_WEEKEND_DAILY = """
     SELECT t.date, t.is_weekend, t.is_holiday, coalesce(a.trip_count, 0) AS trip_count
     FROM warehouse.dim_time t
     LEFT JOIN warehouse.trips_by_day_agg a ON a.date = t.date AND a.city = %(city)s
+    WHERE t.date >= %(start_date)s
     ORDER BY t.date
 """
 

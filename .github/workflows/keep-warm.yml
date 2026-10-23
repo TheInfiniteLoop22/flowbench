@@ -1,9 +1,11 @@
 name: keep-warm
 
 # Render's free tier sleeps the API after ~15 min idle, and a cold start takes
-# 30-50 s. Ping a DB-backed endpoint every 10 min so demo visitors don't hit it.
-# (Also keeps Neon's compute warm.) GitHub pauses scheduled workflows after 60
-# days without repo activity -- re-enable from the Actions tab if that happens.
+# 30-50 s. This pings a DB-backed endpoint. Note: GitHub treats `schedule` as best
+# effort and in practice runs it every few hours, and Neon suspends after ~5 min,
+# so this only reduces cold starts; an external 5-minute uptime monitor is better.
+# GitHub pauses scheduled workflows after 60 days without repo activity --
+# re-enable from the Actions tab if that happens.
 on:
   schedule:
     - cron: "*/10 * * * *"

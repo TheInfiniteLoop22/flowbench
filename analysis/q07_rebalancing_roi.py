@@ -24,9 +24,9 @@ def main():
             elapsed = time.time() - t0
             print(f"Top {len(rows)} rebalancing candidates in {elapsed:.1f}s\n")
 
-            print(f"{'station':40}  {'deficit':>9}  {'lost trips':>11}  {'truck-hrs':>10}  {'trips/truck-hr':>15}")
-            for station_id, name, deficit, lost, truck_hrs, roi in rows:
-                print(f"{name[:40]:40}  {deficit:>9,}  {lost:>11,.0f}  {truck_hrs:>10,.1f}  {roi:>15.2f}")
+            print(f"{'station':40}  {'episodes':>9}  {'lost trips':>11}  {'truck-hrs':>10}  {'trips/truck-hr':>15}")
+            for station_id, name, episodes, lost, truck_hrs, roi in rows:
+                print(f"{name[:40]:40}  {episodes:>9,}  {lost:>11,.0f}  {truck_hrs:>10,.1f}  {roi:>15.2f}")
     finally:
         conn.close()
 

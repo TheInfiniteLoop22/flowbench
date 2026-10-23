@@ -1,3 +1,6 @@
+import os
+
+import psycopg2
 import pytest
 from fastapi.testclient import TestClient
 
@@ -149,3 +152,54 @@ def test_rebalancing_candidates_custom_truck_capacity_changes_truck_hours(client
         common = set(by_station_slow) & set(by_station_fast)
         for station_id in common:
             assert by_station_slow[station_id] >= by_station_fast[station_id]
+
+
+def test_survives_server_closing_idle_connections(client):
+    """Neon suspends idle compute and drops connections; the next request must still succeed."""
+    assert client.get("/cities").status_code == 200   # make sure the pool holds a connection
+    admin = psycopg2.connect(os.environ["DATABASE_URL"])
+    admin.autocommit = True
+    with admin.cursor() as cur:
+        cur.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                    "WHERE datname = current_database() AND pid <> pg_backend_pid()")
+    admin.close()
+    assert client.get("/cities").status_code == 200
+
+
+def test_more_concurrent_requests_than_connections_all_succeed(client):
+    """The pool holds 10 connections; 40 simultaneous requests must queue, not fail."""
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(40) as ex:
+        codes = list(ex.map(lambda _: client.get("/cities").status_code, range(120)))
+    assert set(codes) == {200}
+
+
+def test_weekday_vs_weekend_adjusted_fields_absent_for_short_window(client):
+    body = client.get("/insights/weekday-vs-weekend").json()
+    assert body["adjusted_pct_difference"] is None and body["adjusted_p_value"] is None  # fixture has 14 days
+
+
+def test_seasonal_adjustment_sharpens_a_weekday_effect_hidden_by_season():
+    """A big seasonal swing plus a 15% weekday premium: adjusting for season recovers the premium
+    and gives far stronger evidence than the raw comparison."""
+    import numpy as np
+    from scipy import stats
+    from api.main import seasonally_adjusted_comparison
+
+    days = np.arange(240)
+    weekend = (days % 7) >= 5
+    season = 115 + 55 * np.sin(days / 240 * 2 * np.pi - 1.5)
+    noise = np.random.default_rng(1).normal(0, 2, 240)
+    counts = list(season * np.where(weekend, 1.0, 1.15) + noise)
+
+    wd = [c for c, w in zip(counts, weekend) if not w]
+    we = [c for c, w in zip(counts, weekend) if w]
+    raw_p = stats.mannwhitneyu(wd, we).pvalue
+    adj_pct, adj_p = seasonally_adjusted_comparison(counts, list(weekend), [False] * 240)
+    assert 0.10 < adj_pct < 0.20
+    assert adj_p < raw_p * 1e-6
+
+
+def test_seasonal_adjustment_returns_none_when_too_short():
+    from api.main import seasonally_adjusted_comparison
+    assert seasonally_adjusted_comparison([1.0] * 20, [False] * 20, [False] * 20) == (None, None)

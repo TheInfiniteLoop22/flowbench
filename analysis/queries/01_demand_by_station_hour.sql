@@ -7,7 +7,7 @@
 -- results predate Chicago's data landing in the same
 -- fact_trips table — without this filter, re-running it today would
 -- silently blend both cities' station-hour counts together. See query
--- 10 for the cross-city comparison.
+-- 9 for the cross-city comparison.
 SELECT
     start_station_id                       AS station_id,
     extract(hour FROM start_time)::int     AS hour_of_day,

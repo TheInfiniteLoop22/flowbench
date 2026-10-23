@@ -16,15 +16,9 @@ const NYC_FINDINGS = [
   },
   {
     title: "Temperature is a strong driver of system-wide demand",
-    stat: "Spearman r = 0.833, p = 8.3×10⁻⁹⁶",
+    stat: "Spearman r = 0.833, p = 1.2×10⁻⁹⁵",
     detail:
       "n=367 days, via Open-Meteo's free historical archive. Precipitation has a smaller but still significant effect (r=-0.149, p=0.0042); days with >1mm precipitation average 11.8% fewer trips than dry days.",
-  },
-  {
-    title: "Exploratory: ~302,565 trips may have been lost to stockouts",
-    stat: "≈0.66% of observed demand, 12 months",
-    detail:
-      "A rough, assumption-based estimate (relative bike level from cumulative net flow; no dock counts in the source data), not a measured stockout count. See the exploratory ranking below.",
   },
 ] as const;
 
@@ -32,8 +26,7 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
   const { city: cityParam } = await searchParams;
   const city = (cityParam === "chicago" ? "chicago" : "new_york") as City;
 
-  const [rebalancing, wvw, morning, evening] = await Promise.all([
-    api.rebalancingCandidates(city, 20),
+  const [wvw, morning, evening] = await Promise.all([
     api.weekdayVsWeekend(city),
     api.networkImbalance(8, city),
     api.networkImbalance(17, city),
@@ -50,7 +43,10 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
         </p>
       </div>
 
-      <Card title="Weekdays vs. weekends" subtitle={wvw.test_used}>
+      <Card
+        title="Weekdays vs. weekends"
+        subtitle={`${wvw.test_used}, ${wvw.weekday_days} weekdays vs ${wvw.weekend_days} weekend days (holidays excluded)`}
+      >
         <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent">
           <span className="h-1.5 w-1.5 rounded-full bg-accent" /> live
         </div>
@@ -58,15 +54,24 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
           <StatTile label="Weekday mean" value={Math.round(wvw.weekday_mean_trips_per_day).toLocaleString()} />
           <StatTile label="Weekend mean" value={Math.round(wvw.weekend_mean_trips_per_day).toLocaleString()} />
           <StatTile
-            label="Difference"
+            label="Difference (raw)"
             value={`${wvw.pct_difference >= 0 ? "+" : ""}${(wvw.pct_difference * 100).toFixed(1)}%`}
-            tone="accent"
+            hint={formatP(wvw.p_value)}
           />
-          <StatTile
-            label="Significance"
-            value={wvw.p_value < 0.001 ? "p < 0.001" : `p = ${wvw.p_value.toFixed(4)}`}
-          />
+          {wvw.adjusted_pct_difference != null && wvw.adjusted_p_value != null && (
+            <StatTile
+              label="Season-adjusted"
+              value={`${wvw.adjusted_pct_difference >= 0 ? "+" : ""}${(wvw.adjusted_pct_difference * 100).toFixed(1)}%`}
+              tone="accent"
+              hint={formatP(wvw.adjusted_p_value)}
+            />
+          )}
         </div>
+        <p className="mt-3 text-xs leading-relaxed text-muted">
+          Daily trips swing far more with the seasons than with the weekday, so the raw comparison understates
+          the weekday effect (especially in Chicago). The season-adjusted figure divides each day by the mean of
+          the surrounding 29 days before comparing.
+        </p>
       </Card>
 
       <Card
@@ -107,57 +112,6 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
           </p>
         </Card>
       )}
-
-      <Card
-        title="Exploratory: stations most affected by stockouts"
-        subtitle="Top 20 by estimated lost trips per truck-hour. Assumptions: relative bike level from cumulative net flow, “likely empty” = below the station’s own 5th percentile, 1 truck moves 20 bikes/hour (not measured)."
-      >
-        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" /> live
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                <th className="py-2 pr-4 font-medium">Station</th>
-                <th className="hidden py-2 pr-4 font-medium text-right sm:table-cell">Stockout episodes</th>
-                <th className="py-2 pr-4 font-medium text-right">Est. lost trips</th>
-                <th className="hidden py-2 pr-4 font-medium text-right sm:table-cell">Truck-hours</th>
-                <th className="py-2 pl-4 font-medium text-right">Trips / truck-hour</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rebalancing.map((r, i) => (
-                <tr key={r.station_id} className="border-b border-border/60 last:border-0">
-                  <td className="py-2 pr-4">
-                    <span className="mr-2 text-muted">{i + 1}.</span>
-                    <Link
-                      href={`/stations/${encodeURIComponent(r.station_id)}`}
-                      className="text-foreground underline-offset-2 hover:text-accent hover:underline"
-                    >
-                      {r.name}
-                    </Link>
-                  </td>
-                  <td className="hidden py-2 pr-4 text-right tabular-nums sm:table-cell">{r.stockout_episodes}</td>
-                  <td className="py-2 pr-4 text-right tabular-nums">{r.estimated_lost_trips.toFixed(0)}</td>
-                  <td className="hidden py-2 pr-4 text-right tabular-nums sm:table-cell">{r.truck_hours_needed.toFixed(1)}</td>
-                  <td className="py-2 pl-4 text-right font-medium tabular-nums text-accent">
-                    {r.lost_trips_per_truck_hour.toFixed(1)}
-                  </td>
-                </tr>
-              ))}
-              {rebalancing.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-6 text-center text-sm text-muted">
-                    No qualifying stockout-prone stations for {CITY_LABELS[city]} (needs &ge;10
-                    recurring episodes to rank — see analysis/queries/07_rebalancing_roi.sql).
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -188,4 +142,8 @@ function ImbalanceList({ hour, rows }: { hour: number; rows: StationImbalance[] 
       <ul>{filling.map(item)}</ul>
     </div>
   );
+}
+
+function formatP(p: number) {
+  return p < 0.001 ? "p < 0.001" : `p = ${p.toFixed(4)}`;
 }

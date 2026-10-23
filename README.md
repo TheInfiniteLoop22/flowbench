@@ -15,26 +15,30 @@ service, and are explored in a Next.js dashboard.
 - API docs: https://flowbench-api-c2z8.onrender.com/docs
 
 The API sleeps after idle on Render's free tier, so the first request can
-take 30–50 seconds; a scheduled GitHub Action
-([keep-warm](.github/workflows/keep-warm.yml)) pings it every 10 minutes.
+take 30–50 seconds. A scheduled GitHub Action
+([keep-warm](.github/workflows/keep-warm.yml)) pings it, but GitHub runs
+free schedules only every few hours, so the dashboard shows a "waking up"
+note and a retry button.
 
 ## Findings
 
 | Finding | Result |
 |---|---|
 | Demand rhythm | Peak at 17:00 (9.2% of daily trips), trough at 04:00 (0.35%): a ~26x swing |
-| Weekday vs. weekend (NYC) | Weekdays +16.7% trips/day, Mann-Whitney U p = 0.0044 |
-| Does that hold in Chicago? | Not clearly: +3.8%, p = 0.319 (not significant) |
+| Weekday vs. weekend (NYC) | Weekdays +14.5% trips/day (Mann-Whitney U, p = 0.0093); +18.1% after removing seasonality (p < 0.001) |
+| Does that hold in Chicago? | Yes once seasonality is removed: +13.3% (p = 0.005). The raw comparison (+1.9%, p = 0.47) is swamped by Chicago's much stronger seasonal swing |
 | Rider type | Casual trips average 19.8 min vs. 11.6 min for members (~70% longer) |
-| Weather | Daily max temperature vs. daily trips: Spearman r = 0.833 (p ≈ 10⁻⁹⁶, n = 367 days) |
+| Weather | Daily max temperature vs. daily trips: Spearman r = 0.833 (p ≈ 10⁻⁹⁵, n = 367 days) |
 | Forecast | 7-day moving average beat a linear trend on a validation holdout; 12.4% MAPE on the final 28 days |
 | Rush hour | Specific stations empty or fill fastest at 08:00 and 17:00 (live on the Insights page) |
 
-**Exploratory estimate**: the source data has no dock counts, so a rough
-lost-trip model (about 302,565 trips, 0.66% of demand) approximates a
-station's bike level from cumulative net flow, treats "likely empty" as
-below the station's own 5th percentile, and assumes one truck moves 20
-bikes per hour. It is a hypothesis for where to look, not a measured result.
+**What is not claimed**: the source data has no dock counts, so how many
+trips were lost to empty stations cannot be measured from trip records
+alone. An earlier experiment that inferred station inventory from cumulative
+net flow was dropped from the dashboard because most of its "empty" hours
+fell at the very start and end of the data window, an artifact of anchoring
+the running total there. The `/insights/rebalancing-candidates` endpoint
+still serves that experimental ranking and should not be read as a measurement.
 
 ## Data engineering notes
 
@@ -91,8 +95,8 @@ City-scoped endpoints take `?city=new_york|chicago` (default `new_york`).
 | `GET /stations/{id}/forecast` | 7-day moving-average forecast |
 | `GET /network/demand` | System-wide hourly demand |
 | `GET /network/imbalance?hour=` | Net bike balance per station at an hour of day |
-| `GET /insights/weekday-vs-weekend` | Live Mann-Whitney U test on daily trips |
-| `GET /insights/rebalancing-candidates` | Exploratory stockout ranking |
+| `GET /insights/weekday-vs-weekend` | Live Mann-Whitney U test on daily trips, raw and season-adjusted |
+| `GET /insights/rebalancing-candidates` | Experimental ranking (not shown in the dashboard) |
 
 ### Dashboard (`dashboard/src/app/`)
 
@@ -101,7 +105,7 @@ City-scoped endpoints take `?city=new_york|chicago` (default `new_york`).
 | `/` | Map: stations colored by net imbalance, hour slider with play |
 | `/stations/[id]` | Demand curve and forecast |
 | `/trends` | City-wide hourly demand and the weekday/weekend result |
-| `/insights` | Weekday/weekend test, rush-hour imbalance, recorded findings, exploratory ranking |
+| `/insights` | Weekday/weekend test (raw and season-adjusted), rush-hour imbalance, recorded findings |
 | `/compare` | NYC vs. Chicago |
 
 ## Run locally
@@ -127,9 +131,12 @@ Analysis scripts: `python analysis/qNN_<name>.py` (read-only).
 ## Known limitations
 
 - The full warehouse rebuild takes 1–2 hours (batch job, not optimized).
-- 11 NYC station names (22 IDs) remain split across genuinely different ID
-  strings, likely mid-window renumbering by the source (~0.9% of NYC stations).
-- The lost-trip and rebalancing figures are assumption-based (see above).
+- Some physical stations still appear under more than one station ID: 11 NYC
+  names (22 IDs) and 55 Chicago names (111 IDs), where the operators
+  re-issued IDs mid-window. City-level results are unaffected; per-station
+  figures for those stations are split across their IDs.
+- The rebalancing ranking endpoint is experimental (see above); live station availability data (GBFS) would be needed to measure stockouts.
+- The 7-day moving-average forecast is a flat baseline and is not validated per station.
 
 ## Repo layout
 

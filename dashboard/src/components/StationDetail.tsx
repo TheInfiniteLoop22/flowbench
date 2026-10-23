@@ -18,7 +18,7 @@ export function StationDetail({ stationId }: { stationId: string }) {
   const [range, setRange] = useState<{ label: string; days?: number }>(RANGES[3]);
   const [data, setData] = useState<StationDemand | null>(null);
   const [forecast, setForecast] = useState<StationForecast | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<false | "missing" | "failed">(false);
   const [settledKey, setSettledKey] = useState("");
   const requestKey = `${stationId}|${range.label}`;
   const loading = settledKey !== requestKey;
@@ -32,9 +32,9 @@ export function StationDetail({ stationId }: { stationId: string }) {
         setData(d);
         setSettledKey(requestKey);
       })
-      .catch(() => {
+      .catch((e) => {
         if (stale) return;
-        setError(true);
+        setError(String(e?.message ?? e).includes("404") ? "missing" : "failed");
         setSettledKey(requestKey);
       });
     return () => {
@@ -52,7 +52,11 @@ export function StationDetail({ stationId }: { stationId: string }) {
         <Link href="/" className="text-sm text-accent hover:underline">
           &larr; back to map
         </Link>
-        <p className="mt-4 text-sm text-danger">Station {stationId} not found.</p>
+        <p className="mt-4 text-sm text-danger">
+          {error === "missing"
+            ? `Station ${stationId} not found.`
+            : "Couldn't load this station. The data API may be waking up; reload in a few seconds."}
+        </p>
       </div>
     );
   }

@@ -10,7 +10,7 @@
 -- Two are NOT safe: demand_by_hour_agg and trips_by_day_agg both
 -- aggregate "every trip, this hour/day" into a single network-wide
 -- number with no per-station grouping — exactly the kind of rollup that
--- would have quietly summed NYC's ~125k trips/day with Chicago's ~2k/day
+-- would have quietly summed NYC's ~125k trips/day with Chicago's ~17k/day
 -- into one meaningless total the moment Chicago's fact_trips rows
 -- landed. Caught by re-reading each rollup's GROUP BY before the
 -- warehouse rebuild that adds Chicago, not after a wrong number shipped.

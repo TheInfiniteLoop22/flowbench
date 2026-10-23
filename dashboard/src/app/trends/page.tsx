@@ -79,7 +79,11 @@ export default async function TrendsPage({ searchParams }: PageProps<"/trends">)
         <p className="mt-4 text-sm text-muted">
           Weekdays average{" "}
           <span className="font-medium text-accent">{(wvw.pct_difference * 100).toFixed(1)}% more</span>{" "}
-          trips/day than weekends, a statistically significant difference.
+          trips/day than weekends, a statistically significant difference
+          {wvw.adjusted_pct_difference != null && (
+            <> ({(wvw.adjusted_pct_difference * 100).toFixed(1)}% after removing seasonality)</>
+          )}
+          .
         </p>
       </Card>
     </div>

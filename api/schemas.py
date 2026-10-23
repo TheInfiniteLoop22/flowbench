@@ -49,6 +49,9 @@ class WeekdayVsWeekend(BaseModel):
     test_used: str
     statistic: float
     p_value: float
+    # Same comparison after removing seasonality (None when the window is too short).
+    adjusted_pct_difference: float | None = None
+    adjusted_p_value: float | None = None
 
 
 class RebalancingCandidate(BaseModel):

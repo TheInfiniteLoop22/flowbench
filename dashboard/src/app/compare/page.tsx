@@ -76,9 +76,19 @@ export default async function ComparePage() {
               {(nycWvw.pct_difference * 100).toFixed(1)}%
             </div>
             <p className="mt-1 text-xs text-muted">
-              weekday vs. weekend, {nycWvw.test_used},{" "}
-              {nycWvw.p_value < 0.001 ? "p < 0.001" : `p = ${nycWvw.p_value.toFixed(4)}`}
+              weekday vs. weekend, raw ({nycWvw.test_used},{" "}
+              {nycWvw.p_value < 0.001 ? "p < 0.001" : `p = ${nycWvw.p_value.toFixed(4)}`})
             </p>
+            {nycWvw.adjusted_pct_difference != null && nycWvw.adjusted_p_value != null && (
+              <p className="mt-2 text-xs text-muted">
+                <span className="font-medium text-accent">
+                  {nycWvw.adjusted_pct_difference >= 0 ? "+" : ""}
+                  {(nycWvw.adjusted_pct_difference * 100).toFixed(1)}%
+                </span>{" "}
+                after removing seasonality (
+                {nycWvw.adjusted_p_value < 0.001 ? "p < 0.001" : `p = ${nycWvw.adjusted_p_value.toFixed(4)}`})
+              </p>
+            )}
           </div>
           <div>
             <div className="text-xs font-medium uppercase tracking-wide text-muted">Chicago</div>
@@ -87,11 +97,26 @@ export default async function ComparePage() {
               {(chiWvw.pct_difference * 100).toFixed(1)}%
             </div>
             <p className="mt-1 text-xs text-muted">
-              weekday vs. weekend, {chiWvw.test_used},{" "}
-              {chiWvw.p_value < 0.001 ? "p < 0.001" : `p = ${chiWvw.p_value.toFixed(4)}`}
+              weekday vs. weekend, raw ({chiWvw.test_used},{" "}
+              {chiWvw.p_value < 0.001 ? "p < 0.001" : `p = ${chiWvw.p_value.toFixed(4)}`})
             </p>
+            {chiWvw.adjusted_pct_difference != null && chiWvw.adjusted_p_value != null && (
+              <p className="mt-2 text-xs text-muted">
+                <span className="font-medium text-accent">
+                  {chiWvw.adjusted_pct_difference >= 0 ? "+" : ""}
+                  {(chiWvw.adjusted_pct_difference * 100).toFixed(1)}%
+                </span>{" "}
+                after removing seasonality (
+                {chiWvw.adjusted_p_value < 0.001 ? "p < 0.001" : `p = ${chiWvw.adjusted_p_value.toFixed(4)}`})
+              </p>
+            )}
           </div>
         </div>
+        <p className="mt-4 text-xs leading-relaxed text-muted">
+          The raw comparison is weaker in Chicago because its demand is far more seasonal (its quietest month is
+          about 16% of its busiest, New York&apos;s about 23%). Once each day is compared with the surrounding
+          month, the weekday commuting premium appears in both cities.
+        </p>
       </Card>
     </div>
   );
