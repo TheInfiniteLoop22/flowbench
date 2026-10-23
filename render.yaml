@@ -1,0 +1,16 @@
+# Render Blueprint for the API. It documents how the service is built and started.
+# The live service was created by hand; this file mirrors it (region and plan are chosen in
+# the dashboard). DATABASE_URL is the Neon connection string and is never committed.
+services:
+  - type: web
+    name: flowbench-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r api/requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /cities
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.4"

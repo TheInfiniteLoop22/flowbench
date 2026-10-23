@@ -120,6 +120,7 @@ python etl/download_and_load.py --city new_york --start 202509 --end 202608
 python etl/download_and_load.py --city chicago  --start 202509 --end 202608
 python etl/build_warehouse.py             # ~1-2 hours for the full 51.8M rows
 python etl/warehouse_checks.py
+python etl/sync_to_neon.py --target "$NEON_URL" --yes   # copy the API's tables to production in one transaction
 
 uvicorn api.main:app --reload             # http://127.0.0.1:8000/docs
 cd dashboard && npm install && npm run dev  # http://localhost:3000
@@ -137,6 +138,12 @@ Analysis scripts: `python analysis/qNN_<name>.py` (read-only).
   figures for those stations are split across their IDs.
 - The rebalancing ranking endpoint is experimental (see above); live station availability data (GBFS) would be needed to measure stockouts.
 - The 7-day moving-average forecast is a flat baseline and is not validated per station.
+
+## Quality and deployment files
+
+- `.github/workflows/ci.yml`: runs the API tests (against a PostGIS service container) and the dashboard lint and build on every push.
+- `render.yaml`: how the API service is built and started on Render.
+- `etl/sync_to_neon.py`: transactional copy of the dimensions and rollups to the production database.
 
 ## Repo layout
 
