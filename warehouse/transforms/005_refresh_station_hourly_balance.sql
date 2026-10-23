@@ -1,0 +1,1 @@
+REFRESH MATERIALIZED VIEW warehouse.station_hourly_balance;
