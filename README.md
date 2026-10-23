@@ -124,7 +124,7 @@ python etl/sync_to_neon.py --target "$NEON_URL" --yes   # copy the API's tables 
 
 uvicorn api.main:app --reload             # http://127.0.0.1:8000/docs
 cd dashboard && npm install && npm run dev  # http://localhost:3000
-pytest api/tests                          # API tests on a seeded fixture warehouse
+python -m pytest api/tests                       # API tests on a seeded fixture warehouse
 ```
 
 Analysis scripts: `python analysis/qNN_<name>.py` (read-only).
